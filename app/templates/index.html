@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Uniqlo Products</title>
+</head>
+<body>
+    <h1>Danh sách sản phẩm</h1>
+    <ul>
+        {% for p in products %}
+        <li>
+            <img src="{{ p.imageLink }}" width="100" />
+            <a href="{{ p.link }}">{{ p.name }}</a> - {{ p.price }} ¥
+            {% if p.discountFlg %}<strong>Sale!</strong>{% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
