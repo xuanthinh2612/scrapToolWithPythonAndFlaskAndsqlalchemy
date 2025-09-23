@@ -1,13 +1,10 @@
 from sqlalchemy import Column, Integer, String, Boolean
-from sqlalchemy.ext.declarative import declarative_base
 
-Base = declarative_base()
+from app import db
 
-class Product(Base):
-    __tablename__ = 'products'
-    
+class Product(db.Model):
     id = Column(Integer, primary_key=True, autoincrement=True)
-    product_code = Column(String(50), unique=True)
+    product_code = Column(String(50))
     name = Column(String(255))
     old_price = Column(Integer)
     current_price = Column(Integer)

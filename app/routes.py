@@ -1,11 +1,20 @@
-from flask import Blueprint, render_template, current_app
+from flask import Blueprint, render_template, request, redirect, url_for
 from app.models import Product
+from sqlalchemy import desc
+from scraper import uniqlo_crawl
 
-bp = Blueprint('main', __name__)
+main = Blueprint("main", __name__)
 
-@bp.route("/")
+@main.route("/", methods=["GET"])
 def index():
-    # session = current_app.db_session
-    # products = session.query(Product).all()
-    # return render_template("index.html", products=products)
-    return render_template("index.html")
+    products = Product.query.order_by(desc(Product.discountFlg)).all()
+    return render_template("index.html", products=products)
+
+
+@main.route("/crawl-uniqlo")
+def crawl_uniqlo_route():
+    try:
+        uniqlo_crawl.uniqlo_crawl()
+        return redirect(url_for("main.index"))
+    except Exception as e:
+        return f"Lỗi: {str(e)}"
