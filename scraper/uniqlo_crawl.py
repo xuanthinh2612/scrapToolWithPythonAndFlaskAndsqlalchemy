@@ -1,19 +1,60 @@
 from flask import Blueprint, render_template, request, redirect, url_for
-from app.models import Product
-from app import db
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 import time
+import os
 
 main = Blueprint("main", __name__)
+is_running = False
 
-def uniqlo_crawl():
+def start_crawl_uniqlo():
+    print("start_crawl_uniqlo")
+    from run import app  # import app ở đây
+
+    global is_running
+    if is_running: return
+    is_running = True
+
+    # Đường dẫn tuyệt đối đến folder chứa file này
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    file_path = os.path.join(BASE_DIR, "data", "productAllURL.txt")
+
+    urls = []
+    with open(file_path, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:  # bỏ dòng trống
+                continue
+            parts = line.split(",", 1)  # tách thành 2 phần (category, url)
+            if len(parts) == 2:
+                category, url = parts
+                urls.append((category.strip(), url.strip()))
+
+    # gọi crawl cho từng category + url
+    try:
+        # crawl code
+        for category, url in urls:
+            print(f"▶ Crawling {category} - {url}")
+                # Tạo app context cho thread này
+            with app.app_context():
+                uniqlo_crawl(category, url)  #  db.session.commit() sẽ hoạt động trong context
+    finally:
+        is_running = False
+
+    return urls
+
+
+def uniqlo_crawl(category, url):
+    print("uniqlo_crawl")
+    from app import db
+    from app.models import Product
+
     options = Options()
     # options.add_argument("--headless")  # bật nếu muốn chạy ngầm
     driver = webdriver.Chrome(options=options)
 
-    driver.get("https://www.uniqlo.com/jp/ja/women/dresses-and-skirts/dresses-and-jumpsuits")
+    driver.get(url)
     time.sleep(3)
 
     SCROLL_PAUSE_TIME = 2
@@ -61,6 +102,7 @@ def uniqlo_crawl():
             else:
                 # Thêm mới
                 new_product = Product(
+                    category=category,
                     product_code=product_code,
                     name=name,
                     old_price=price,
@@ -72,6 +114,8 @@ def uniqlo_crawl():
                 db.session.add(new_product)
         except Exception as e:
             print("Lỗi khi check sản phẩm:", e)
+            driver.quit()
+
 
     db.session.commit()
     driver.quit()
