@@ -11,3 +11,4 @@ class Product(db.Model):
     discountFlg = Column(Boolean)
     link = Column(String(500))
     imageLink = Column(String(500))
+    category = Column(String(255))

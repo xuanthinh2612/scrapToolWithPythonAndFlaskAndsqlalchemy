@@ -23,4 +23,7 @@ def create_app():
     from app.routes import main
     app.register_blueprint(main)
 
+    from app.crawl_schedule import start_scheduler
+    start_scheduler()
+
     return app

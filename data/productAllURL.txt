@@ -1,0 +1,5 @@
+women,https://www.uniqlo.com/jp/ja/women/tops/t-shirts?path=%2C%2C1568%2C
+women,https://www.uniqlo.com/jp/ja/women/dresses-and-skirts/dresses-and-jumpsuits
+men,https://www.uniqlo.com/jp/ja/men/shirts-and-polo-shirts/dress-shirts?path=%2C%2C94394%2C
+kids,https://www.uniqlo.com/jp/ja/kids/sweaters-and-shirts/sweaters?path=%2C%2C94837%2C
+baby,https://www.uniqlo.com/jp/ja/baby/newborn2/tops
