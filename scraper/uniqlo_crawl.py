@@ -9,7 +9,6 @@ main = Blueprint("main", __name__)
 is_running = False
 
 def start_crawl_uniqlo():
-    print("start_crawl_uniqlo")
     from run import app  # import app ở đây
 
     global is_running
@@ -46,7 +45,6 @@ def start_crawl_uniqlo():
 
 
 def uniqlo_crawl(category, url):
-    print("uniqlo_crawl")
     from app import db
     from app.models import Product
 
