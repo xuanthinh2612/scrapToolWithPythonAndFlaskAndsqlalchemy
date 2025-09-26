@@ -90,13 +90,14 @@ def uniqlo_crawl(category, url):
             existing_product = Product.query.filter_by(product_code=product_code, link = link).first()
             if existing_product:
                 # Update thông tin nếu đã tồn tại
-                existing_product.name = name
-                existing_product.current_price = price
-                if price > existing_product.old_price:
-                    existing_product.old_price = price
-                existing_product.discountFlg = discountFlg
-                existing_product.link = link
-                existing_product.imageLink = imageLink
+                if existing_product.current_price != price:
+                    existing_product.name = name
+                    existing_product.current_price = price
+                    if price > existing_product.old_price:
+                        existing_product.old_price = price
+                    existing_product.discountFlg = discountFlg
+                    existing_product.link = link
+                    existing_product.imageLink = imageLink
             else:
                 # Thêm mới
                 new_product = Product(

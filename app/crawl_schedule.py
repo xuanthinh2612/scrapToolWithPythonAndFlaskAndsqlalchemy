@@ -4,7 +4,7 @@ import threading
 from scraper.uniqlo_crawl import start_crawl_uniqlo
 
 def run_scheduler():
-    schedule.every(2).hours.do(start_crawl_uniqlo)
+    schedule.every(3).hours.do(start_crawl_uniqlo)
 
     while True:
         schedule.run_pending()
