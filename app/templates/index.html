@@ -209,7 +209,7 @@
 
     <div class="container">
         <h3>Danh sách sản phẩm (Tổng: {{ products|length }})</h3>
-        <table>
+        <table id="productTable">
             <thead>
                 <tr>
                     <th>STT</th>
@@ -218,7 +218,7 @@
                     <th>Tên sản phẩm</th>
                     <th>Giá Cũ (¥)</th>
                     <th>Giá Mới (¥)</th>
-                    <th>Giảm (¥)</th>
+                    <th id="discountHeader" style="cursor: pointer;" >Giảm(¥) ⬍</th>
                 </tr>
             </thead>
             <tbody>
@@ -235,7 +235,7 @@
                     </td>
                     <td>¥{{ "{:,}".format(p.old_price) }}</td>
                     <td>¥{{ "{:,}".format(p.current_price) }}</td>
-                    <td>¥{{ "{:,}".format(p.old_price - p.current_price) }}</td>
+                    <td class="discount">{{ "{:,}".format(p.old_price - p.current_price) }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -258,7 +258,36 @@
                 link.classList.add('active');
             }
         });
+
     </script>
+    <script>
+        const discountHeader = document.getElementById("discountHeader");
+        const table = document.getElementById("productTable");
+        const tbody = table.querySelector("tbody");
+        let sorted = false;
+        let originalRows = Array.from(tbody.rows); // Lưu thứ tự gốc
+
+        discountHeader.addEventListener("click", () => {
+            if (!sorted) {
+                // Sort giảm dần
+                let rows = Array.from(tbody.rows);
+                rows.sort((a, b) => {
+                    let discountA = parseInt(a.querySelector(".discount").textContent.replace(/,/g, ""));
+                    let discountB = parseInt(b.querySelector(".discount").textContent.replace(/,/g, ""));
+                    return discountB - discountA;
+                });
+                rows.forEach(row => tbody.appendChild(row));
+                sorted = true;
+                discountHeader.textContent = "Giảm (¥) ▼";
+            } else {
+                // Trở lại như ban đầu
+                originalRows.forEach(row => tbody.appendChild(row));
+                sorted = false;
+                discountHeader.textContent = "Giảm (¥) ⬍";
+            }
+        });
+    </script>
+
 </body>
 
 </html>
