@@ -12,3 +12,4 @@ class Product(db.Model):
     link = Column(String(500))
     imageLink = Column(String(500))
     category = Column(String(255))
+    type = Column(String(255))

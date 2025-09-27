@@ -8,14 +8,31 @@ main = Blueprint("main", __name__)
 
 @main.route("/", methods=["GET"])
 def index():
-    category = request.args.get("category", "women")
-    products = Product.query.filter_by(category=category).order_by(desc(Product.discountFlg)).order_by(asc(Product.current_price)).all()
-    return render_template("index.html", products=products)
+    return redirect(url_for("main.uniqlo_index"))
 
-@main.route("/sale", methods=["GET"])
-def sale():
-    products = Product.query.filter_by(discountFlg=True).order_by(asc(Product.current_price)).all()
-    return render_template("index.html", products=products)
+@main.route("/uniqlo", methods=["GET"])
+def uniqlo_index():
+    category = request.args.get("category", "women")
+    products = (Product.query.filter_by(category=category, type="uniqlo").order_by(desc(Product.discountFlg))
+                .order_by(asc(Product.current_price)).all())
+    return render_template("index.html", products=products, brand="uniqlo")
+
+@main.route("/uniqlo/sale", methods=["GET"])
+def uniqlo_sale():
+    products = Product.query.filter_by(discountFlg=True, type="uniqlo").order_by(asc(Product.current_price)).all()
+    return render_template("index.html", products=products, brand="uniqlo")
+
+@main.route("/gu", methods=["GET"])
+def gu_index():
+    category = request.args.get("category", "women")
+    products = (Product.query.filter_by(category=category, type="gu").order_by(desc(Product.discountFlg))
+                .order_by(asc(Product.current_price)).all())
+    return render_template("index.html", products=products, brand="gu")
+
+@main.route("/gu/sale", methods=["GET"])
+def gu_sale():
+    products = Product.query.filter_by(discountFlg=True, type="gu").order_by(asc(Product.current_price)).all()
+    return render_template("index.html", products=products, brand="gu")
 
 @main.route("/search", methods=["POST"])
 def search():
@@ -32,9 +49,9 @@ def search():
             )
         ).order_by(desc(Product.discountFlg)).order_by(asc(Product.current_price)).all()
 
-    return render_template("index.html", products=products)
+    return render_template("index.html", products=products, brand="uniqlo")
 
-@main.route("/crawl-uniqlo")
+@main.route("/start-crawl")
 def crawl_uniqlo_route():
     try:
         # Tạo thread chạy crawl

@@ -48,6 +48,8 @@ def uniqlo_crawl(category, url):
     from app import db
     from app.models import Product
 
+    type = "uniqlo" if "uniqlo.com" in url else "gu"
+
     options = Options()
     # options.add_argument("--headless")  # bật nếu muốn chạy ngầm
     driver = webdriver.Chrome(options=options)
@@ -96,7 +98,6 @@ def uniqlo_crawl(category, url):
                     if price > existing_product.old_price:
                         existing_product.old_price = price
                     existing_product.discountFlg = discountFlg
-                    existing_product.link = link
                     existing_product.imageLink = imageLink
             else:
                 # Thêm mới
@@ -108,7 +109,8 @@ def uniqlo_crawl(category, url):
                     current_price=price,
                     discountFlg=discountFlg,
                     link=link,
-                    imageLink=imageLink
+                    imageLink=imageLink,
+                    type=type
                 )
                 db.session.add(new_product)
         except Exception as e:

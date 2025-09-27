@@ -186,6 +186,20 @@
             color: white;
             z-index: 1;
         }
+
+        .logo .brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+            color: #319dab;
+            padding: 0.2rem 0.5rem;
+            border-radius: 5px;
+        }
+
+        .logo .brand.active {
+            background-color: #e65e3c; /* màu nổi bật */
+            color: white;
+        }
+
     </style>
     <style>
         html {
@@ -219,14 +233,17 @@
 <body>
 
 <nav class="navbar">
-    <div class="logo">Uniqlo Products</div>
+    <div class="logo">
+        <a href="/gu" class="brand" data-brand="gu">GU</a>
+        <a href="/uniqlo" class="brand" data-brand="uniqlo">Uniqlo</a>
+    </div>
     <div class="categories">
-        <a href="/?category=women" data-category="women">Women</a>
-        <a href="/?category=men" data-category="men">Men</a>
-        <a href="/?category=kids" data-category="kids">Kids</a>
-        <a href="/?category=baby" data-category="baby">Baby</a>
-        <a href="/sale" data-category="sale">Sale</a>
-        <a href="/crawl-uniqlo" style="background-color: #e65e3c;">Quét sản phẩm uniqlo</a>
+        <a href="/{{ brand }}?category=women" data-category="women">Women</a>
+        <a href="/{{ brand }}?category=men" data-category="men">Men</a>
+        <a href="/{{ brand }}?category=kids" data-category="kids">Kids</a>
+        <a href="/{{ brand }}?category=baby" data-category="baby">Baby</a>
+        <a href="/{{ brand }}/sale" data-category="sale">Sale</a>
+        <a href="/start-crawl" style="background-color: #e65e3c;">Quét sản phẩm</a>
     </div>
     <form action="/search" method="post">
         <input type="text" name="searchKey" id="searchKey" placeholder="Tìm kiếm...">
@@ -316,7 +333,19 @@
         }
     });
 </script>
+<script>
+    const brandLinks = document.querySelectorAll(".logo .brand");
+    const path = window.location.pathname;
 
+    brandLinks.forEach(link => {
+        link.classList.remove("active");
+        if (path.startsWith("/gu") && link.dataset.brand === "gu") {
+            link.classList.add("active");
+        } else if (path.startsWith("/uniqlo") && link.dataset.brand === "uniqlo") {
+            link.classList.add("active");
+        }
+    });
+</script>
 </body>
 
 </html>
