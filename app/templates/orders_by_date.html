@@ -238,115 +238,54 @@
         <a href="/uniqlo" class="brand" data-brand="uniqlo">Uniqlo</a>
     </div>
     <div class="categories">
-        <a href="/{{ brand }}?category=women" data-category="women">Women</a>
-        <a href="/{{ brand }}?category=men" data-category="men">Men</a>
-        <a href="/{{ brand }}?category=kids" data-category="kids">Kids</a>
-        <a href="/{{ brand }}?category=baby" data-category="baby">Baby</a>
-        <a href="/{{ brand }}/sale" data-category="sale">Sale</a>
-        <a href="/start-crawl" style="background-color: #e65e3c;">Quét sản phẩm</a>
         <a href="/emails" style="background-color: #e65e3c;">Danh sách đơn</a>
     </div>
-    <form action="/search" method="post">
-        <input type="text" name="searchKey" id="searchKey" placeholder="Tìm kiếm...">
+    <form action="/orders/search" method="post">
+        <input type="text" name="searchKey" id="searchKey" placeholder="mã đơn hàng...">
         <button type="submit">Tìm</button>
     </form>
 </nav>
 
 <div class="container">
-    <h3>Danh sách sản phẩm (Tổng: {{ products|length }})</h3>
+    <h3>Danh sách đơn hàng (Tổng: {{ orders|length }})
+    </h3>
     <table id="productTable">
         <thead>
         <tr>
             <th>STT</th>
-            <th>Ảnh</th>
-            <th>Code</th>
-            <th>Tên sản phẩm</th>
-            <th>Giá Cũ (¥)</th>
-            <th>Giá Mới (¥)</th>
-            <th id="discountHeader" style="cursor: pointer;">Giảm(¥) ⬍</th>
+            <th>Ngày</th>
+            <th>Tên người nhận</th>
+            <th>Order Code</th>
+            <th>Tên quán</th>
+            <th>Dự kiến giao</th>
+            <th>Giao hàng</th>
+            <th>Mã vẫn chuyển</th>
+            <th>Status</th>
         </tr>
         </thead>
         <tbody>
-        {% for p in products %}
+        {% for o in orders %}
         <tr>
             <td>{{ loop.index }}</td>
-            <td><img src="{{ p.imageLink }}" alt="{{ p.name }}"></td>
-            <td>{{ p.product_code }}</td>
-            <td>
-                <a href="{{ p.link }}" target="_blank">{{ p.name }}</a>
-                {% if p.discountFlg %}
-                <span class="badge-sale">Sale!</span>
-                {% endif %}
-            </td>
-            <td>¥{{ "{:,}".format(p.old_price) }}</td>
-            <td>¥{{ "{:,}".format(p.current_price) }}</td>
-            <td class="discount">{{ "{:,}".format(p.old_price - p.current_price) }}</td>
+            <td>{{ o.send_date }}</td>
+            <td>{{ o.receiver_name }}</td>
+            <td>{{ o.order_code }}</td>
+            <td>{{ o.store_name if o.store_name else "-" }}</td>
+            <td>{{ o.delivery_plan }}</td>
+            <td>{{ o.delivery_company if o.delivery_company else "-" }}</td>
+            <td>{{ o.delivery_tracking_code if o.delivery_company else "-" }}</td>
+            <td>{{ o.order_status  }}</td>
         </tr>
         {% endfor %}
         </tbody>
     </table>
 </div>
-<!-- Nút lên đầu trang -->
-<a href="#" class="btn-top">↑ Lên đầu trang</a>
 
+<a href="#" class="btn-top">↑ Lên đầu trang</a>
 <footer>
     &copy; 2025 Uniqlo Products. All rights reserved.
 </footer>
 
-<script>
-    // Active category dựa trên URL
-    const categoryLinks = document.querySelectorAll('.categories a');
-    const urlParams = new URLSearchParams(window.location.search);
-    const currentCategory = urlParams.get('category') || (window.location.pathname.includes('sale') ? 'sale' : null);
-
-    categoryLinks.forEach(link => {
-        link.classList.remove('active');
-        if (link.dataset.category === currentCategory) {
-            link.classList.add('active');
-        }
-    });
-
-</script>
-<script>
-    const discountHeader = document.getElementById("discountHeader");
-    const table = document.getElementById("productTable");
-    const tbody = table.querySelector("tbody");
-    let sorted = false;
-    let originalRows = Array.from(tbody.rows); // Lưu thứ tự gốc
-
-    discountHeader.addEventListener("click", () => {
-        if (!sorted) {
-            // Sort giảm dần
-            let rows = Array.from(tbody.rows);
-            rows.sort((a, b) => {
-                let discountA = parseInt(a.querySelector(".discount").textContent.replace(/,/g, ""));
-                let discountB = parseInt(b.querySelector(".discount").textContent.replace(/,/g, ""));
-                return discountB - discountA;
-            });
-            rows.forEach(row => tbody.appendChild(row));
-            sorted = true;
-            discountHeader.textContent = "Giảm (¥) ▼";
-        } else {
-            // Trở lại như ban đầu
-            originalRows.forEach(row => tbody.appendChild(row));
-            sorted = false;
-            discountHeader.textContent = "Giảm (¥) ⬍";
-        }
-    });
-</script>
-<script>
-    const brandLinks = document.querySelectorAll(".logo .brand");
-    const path = window.location.pathname;
-
-    brandLinks.forEach(link => {
-        link.classList.remove("active");
-        if (path.startsWith("/gu") && link.dataset.brand === "gu") {
-            link.classList.add("active");
-        } else if (path.startsWith("/uniqlo") && link.dataset.brand === "uniqlo") {
-            link.classList.add("active");
-        }
-    });
-</script>
 </body>
 
 </html>
