@@ -5,6 +5,90 @@
     <meta charset="UTF-8">
     <title>Uniqlo Products</title>
     <style>
+        /* Button style */
+        .table-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .table-buttons .btn {
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.85rem;
+            background-color: #319dab;
+            color: white;
+            transition: background-color 0.3s;
+        }
+
+        .table-buttons .btn:hover {
+            background-color: #247b8a;
+        }
+
+        .table-buttons .btn-update {
+            background-color: #e65e3c;
+        }
+
+        .table-buttons .btn-update:hover {
+            background-color: #d04e2b;
+        }
+
+        /* Table wrapper for horizontal scroll */
+        .table-wrapper {
+            overflow-x: auto;
+            max-width: 100%;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Table style */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        table th, table td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        table th {
+            background-color: #319dab;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        table tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        /* Status style */
+        .status {
+            padding:0.2rem 0.5rem;
+            border-radius:4px;
+            font-size:0.85rem;
+            font-weight:500;
+            display:inline-block;
+            color:white;
+        }
+
+        .status.done { background-color:#4caf50; }      /* xanh */
+        .status.pending { background-color:#e65e3c; }   /* cam/đỏ */
+
+        /* Responsive */
+        @media (max-width:768px) {
+            .table-buttons { flex-direction: column; gap:0.3rem; }
+            table th, table td { padding:0.5rem; }
+        }
+    </style>
+    <style>
         /* Layout cơ bản */
         html,
         body {
@@ -226,6 +310,20 @@
             background-color: #247b8a;
             transform: scale(1.1);
         }
+
+        /* Status */
+        .status {
+            padding:0.2rem 0.5rem;
+            border-radius:4px;
+            font-size:0.85rem;
+            font-weight:500;
+            display:inline-block;
+            color:white;
+        }
+        .status.done { background-color:#4caf50; }      /* xanh */
+        .status.pending { background-color:#e65e3c; }   /* cam/đỏ */
+
+        /* store_name đã dùng inline style: color:#e65e3c */
     </style>
 
 </head>
@@ -238,53 +336,142 @@
         <a href="/uniqlo" class="brand" data-brand="uniqlo">Uniqlo</a>
     </div>
     <div class="categories">
-        <a href="/emails" style="background-color: #e65e3c;">Danh sách đơn</a>
+        <a href="/orders" style="background-color: #e65e3c;">Danh sách đơn</a>
     </div>
     <form action="/orders/search" method="post">
-        <input type="text" name="searchKey" id="searchKey" placeholder="mã đơn hàng...">
+        <input type="text" name="searchKey" id="searchKey" placeholder="mã đơn hàng, tên, mã vẫn chuyển...">
         <button type="submit">Tìm</button>
     </form>
 </nav>
 
 <div class="container">
-    <h3>Danh sách đơn hàng (Tổng: {{ orders|length }})
-    </h3>
-    <table id="productTable">
-        <thead>
-        <tr>
-            <th>STT</th>
-            <th>Ngày</th>
-            <th>Tên người nhận</th>
-            <th>Order Code</th>
-            <th>Tên quán</th>
-            <th>Dự kiến giao</th>
-            <th>Giao hàng</th>
-            <th>Mã vẫn chuyển</th>
-            <th>Status</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for o in orders %}
-        <tr>
-            <td>{{ loop.index }}</td>
-            <td>{{ o.send_date }}</td>
-            <td>{{ o.receiver_name }}</td>
-            <td>{{ o.order_code }}</td>
-            <td>{{ o.store_name if o.store_name else "-" }}</td>
-            <td>{{ o.delivery_plan }}</td>
-            <td>{{ o.delivery_company if o.delivery_company else "-" }}</td>
-            <td>{{ o.delivery_tracking_code if o.delivery_company else "-" }}</td>
-            <td>{{ o.order_status  }}</td>
-        </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+    <h1 style="color: #e65e3c; margin: 0">
+        {% if store_name == 'ORDER_SUCCESS' %}
+        Đơn đã đặt
+        {% elif store_name == 'DELIVERY_TO_STOCK' %}
+        Đơn gửi về kho
+        {% else %}
+        {{ store_name }}
+        {% endif %}
+    </h1>
+    {% for item in summary %}
+    <div>
+        <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom:0.5rem;">
+            <h5 style="margin:0;">Ngày update {{ item.order_date }} ({{ item.orders|length }})</h5>
+            <div class="table-buttons">
+                <button type="button" class="btn" onclick="checkAll('{{ loop.index }}')">Chọn tất cả</button>
+                <button type="button" class="btn" onclick="uncheckAll('{{ loop.index }}')">Bỏ chọn tất cả</button>
+                <button type="button" class="btn btn-update" onclick="updateSelected('{{ loop.index }}')">Cập nhật
+                </button>
+            </div>
+        </div>
+
+        <form id="form-{{ loop.index }}" method="post" action="/orders/update-status">
+            <div class="table-wrapper">
+                <table id="productTable-{{ loop.index }}">
+                    <thead>
+                    <tr>
+                        <th>STT</th>
+                        <th>Ngày đặt</th>
+                        <th>Người nhận</th>
+                        <th>Order Code</th>
+                        <th>Shop</th>
+                        <th>Dự kiến giao</th>
+                        <th>Cty Giao hàng</th>
+                        <th>Mã vận chuyển</th>
+                        <th>Tình trạng đơn</th>
+                        <th>Done</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for o in item.orders %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ o.send_date.date() }}</td>
+                        <td>{{ o.receiver_name }}</td>
+                        <td>{{ o.order_code }}</td>
+                        <td>{{ o.store_name if o.store_name else "-" }}</td>
+                        <td>{{ o.delivery_plan }}</td>
+                        <td>{{ o.delivery_company if o.delivery_company else "-" }}</td>
+                        <td>{{ o.delivery_tracking_code if o.delivery_company else "-" }}</td>
+                        <td>
+                            <span class="status {% if o.order_status == 'done' %}done{% else %}pending{% endif %}">
+                                {% if o.order_status == 'ordered' %}Đã_đặt_hàng
+                                {% elif o.order_status == 'ready_to_delivery' %}Đang_gửi_về_kho
+                                {% elif o.order_status == 'ready_to_receive' %}Hàng_đã_về_shop
+                                {% elif o.order_status == 'completed' %}Đã_hoàn_thành
+                                {% elif o.order_status == 'canceled' %}Đã_hủy
+                                {% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            <input type="checkbox" name="selected_orders" value="{{ o.id }}"
+                                   {% if o.order_status=='completed' %}
+                                       checked disabled
+                                   {% elif o.order_status in ['ordered', 'ready_to_delivery', 'canceled'] %}
+                                        disabled
+                                   {% endif %}
+                            >
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </form>
+    </div>
+    {% endfor %}
 </div>
 
 <a href="#" class="btn-top">↑ Lên đầu trang</a>
 <footer>
     &copy; 2025 Uniqlo Products. All rights reserved.
 </footer>
+
+<script>
+    function checkAll(index) {
+        const form = document.getElementById(`form-${index}`);
+        form.querySelectorAll('input[type="checkbox"]:not(:disabled)').forEach(cb => cb.checked = true);
+    }
+
+    function uncheckAll(index) {
+        const form = document.getElementById(`form-${index}`);
+        form.querySelectorAll('input[type="checkbox"]:not(:disabled)').forEach(cb => cb.checked = false);
+    }
+
+    function updateSelected(index) {
+        if (!confirm("Bạn có chắc chắn muốn cập nhật trạng thái các đơn hàng đã chọn?")) return;
+
+        const form = document.getElementById(`form-${index}`);
+        const selected = Array.from(form.querySelectorAll('input[name="selected_orders"]:checked:not(:disabled)'))
+                              .map(cb => cb.value);
+
+        if (selected.length === 0) {
+            alert("Chưa chọn đơn hàng nào hợp lệ!");
+            return;
+        }
+
+        fetch('/orders/update-status', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({order_ids: selected})
+        })
+        .then(resp => resp.json())
+        .then(data => {
+            alert(data.message);
+
+            // Tick lại và disable các checkbox đã update
+            selected.forEach(id => {
+                const cb = form.querySelector(`input[name="selected_orders"][value="${id}"]`);
+                if (cb) {
+                    cb.checked = true;
+                    cb.disabled = true;
+                }
+            });
+        })
+        .catch(err => console.error(err));
+    }
+</script>
 
 </body>
 

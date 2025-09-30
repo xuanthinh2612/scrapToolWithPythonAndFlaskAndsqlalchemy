@@ -20,7 +20,7 @@ class OrderDetail(db.Model):
     status = ["ordered", "ready_to_delivery", "ready_to_receive", "completed", "canceled"]
     id = Column(Integer, primary_key=True, autoincrement=True)
     send_date = Column(DateTime())
-    update_date = Column(String(50))
+    update_date = Column(DateTime())
     sender = Column(String(50))
     receiver_email = Column(String(50))
     order_code = Column(String(50))

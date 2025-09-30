@@ -1,10 +1,13 @@
-from flask import Blueprint, render_template, request, redirect, url_for
-from app.models import Product, OrderDetail
-from sqlalchemy import desc, or_, asc, func
-from scraper import uniqlo_crawl
-from app.google_mail_service import get_order_detail, update_order_detail
 import threading
-from datetime import datetime, timedelta
+from collections import defaultdict
+
+from flask import Blueprint, render_template, request, redirect, url_for, jsonify
+from sqlalchemy import desc, or_, asc, func, and_
+
+from app.google_mail_service import get_order_detail, update_order_detail
+from app.models import Product, OrderDetail
+from scraper import uniqlo_crawl
+from app.const import *
 
 main = Blueprint("main", __name__)
 
@@ -73,34 +76,120 @@ def crawl_uniqlo_route():
         return f"Lỗi: {str(e)}"
 
 
-@main.route("/emails")
+@main.route("/orders")
 def order_index():
     from app import db
-    try:
-        results = db.session.query(
-            func.date(OrderDetail.update_date).label('order_day'),
-            func.count(OrderDetail.id).label('email_count')
-        ).group_by(func.date(OrderDetail.update_date)).order_by(desc(OrderDetail.update_date)).all()
+    from sqlalchemy import func, case, and_
 
-        # Chuyển kết quả thành list dict để dễ dùng trong template
-        summary = [{'day': r.order_day, 'count': r.email_count} for r in results]
+    try:
+        # Tính số đơn theo store_name, chỉ đếm những order_status khác completed/canceled
+        results = db.session.query(
+            OrderDetail.store_name.label('store_name'),
+            func.sum(
+                case(
+                    (~OrderDetail.order_status.in_(['completed', 'canceled']), 1),
+                    else_=0
+                )
+            ).label('order_count')
+        ).filter(OrderDetail.store_name.isnot(None)) \
+            .group_by(OrderDetail.store_name) \
+            .order_by(desc(OrderDetail.store_name)) \
+            .all()
+
+        summary = [{'store_name': r.store_name, 'order_count': r.order_count} for r in results]
+
+        # Các order gửi về kho
+        deliver_to_stock_orders = OrderDetail.query.filter(
+            and_(
+                OrderDetail.store_name.is_(None),
+                OrderDetail.delivery_tracking_code.isnot(None),
+                ~OrderDetail.order_status.in_(['completed', 'canceled'])
+            )
+        ).order_by(OrderDetail.update_date).all()
+        summary.append({
+            'store_name': DELIVERY_TO_STOCK,
+            'order_count': len(deliver_to_stock_orders)
+        })
+
+        # Các order đã đặt thành công (không có tracking_code)
+        ordered_success_orders = OrderDetail.query.filter(
+            and_(
+                OrderDetail.store_name.is_(None),
+                OrderDetail.delivery_tracking_code.is_(None),
+                ~OrderDetail.order_status.in_(['completed', 'canceled'])
+            )
+        ).order_by(OrderDetail.update_date).all()
+        summary.append({
+            'store_name': ORDER_SUCCESS,
+            'order_count': len(ordered_success_orders)
+        })
 
         return render_template("orders_index.html", summary=summary, brand="uniqlo")
+
     except Exception as e:
         return f"Lỗi: {str(e)}"
 
 
-@main.route("/order-by-date")
-def order_by_date():
+@main.route("/order-by-store")
+def order_by_store():
     # Lấy ngày từ query string, mặc định hôm nay
-    date_str = request.args.get("date", datetime.now().strftime("%Y-%m-%d"))
-    target_date = datetime.strptime(date_str, "%Y-%m-%d")
-    # Ngày tiếp theo để làm ranh giới 23:59:59
-    next_day = target_date + timedelta(days=1)
+    store_name = request.args.get("store")
 
-    orders_by_date = OrderDetail.query.filter(OrderDetail.update_date >= target_date,
-                                              OrderDetail.update_date < next_day).all()
-    return render_template("orders_by_date.html", orders=orders_by_date, brand="uniqlo")
+    if store_name:  # nếu store_name không rỗng => filter theo store_name
+        if store_name == "ORDER_SUCCESS":
+            query = OrderDetail.query.filter(
+                and_(
+                    OrderDetail.store_name.is_(None),  # store_name IS NULL
+                    OrderDetail.delivery_tracking_code.is_(None)  # delivery_tracking_code IS NULL
+                )
+            ).order_by(desc(OrderDetail.update_date))
+        elif store_name == "DELIVERY_TO_STOCK":
+            query = OrderDetail.query.filter(
+                and_(
+                    OrderDetail.store_name.is_(None),  # store_name IS NULL
+                    OrderDetail.delivery_tracking_code.isnot(None)  # delivery_tracking_code IS NOT NULL
+                )
+            ).order_by(desc(OrderDetail.update_date))
+        else:
+            query = OrderDetail.query.filter_by(store_name=store_name).order_by(desc(OrderDetail.update_date))
+    else:  # nếu store_name rỗng hoặc None => lấy các record store_name IS NULL
+        query = OrderDetail.query.filter(OrderDetail.store_name.is_(None)).order_by(desc(OrderDetail.update_date))
+
+    orders_by_store = query.limit(LIMIT_NUMBER).all()
+
+    # Group theo ngày bằng Python
+    grouped = defaultdict(list)
+    for o in orders_by_store:
+        day = o.update_date.date()  # chỉ lấy yyyy-mm-dd
+        grouped[day].append(o)
+
+    # Chuyển thành list để dễ render
+    summary = [
+        {"order_date": day, "orders": items}
+        for day, items in sorted(grouped.items(), reverse=True)
+    ]
+
+    return render_template("orders_by_date.html", summary=summary, store_name=store_name or "Đặt về kho",
+                           brand="uniqlo")
+
+
+@main.route("/orders/update-status", methods=["POST"])
+def update_order_status():
+    from app import db
+
+    data = request.get_json()
+    order_ids = data.get("order_ids", [])
+
+    if not order_ids:
+        return jsonify({"message": "Chưa có đơn nào được chọn!"}), 400
+
+    # Cập nhật status thành 'completed'
+    OrderDetail.query.filter(OrderDetail.id.in_(order_ids)).update(
+        {"order_status": "completed"}, synchronize_session=False
+    )
+    db.session.commit()
+
+    return jsonify({"message": f"Cập nhật thành công {len(order_ids)} đơn hàng."})
 
 
 @main.route("/orders/search", methods=["POST"])
@@ -109,20 +198,30 @@ def search_order():
 
     if not searchKey:
         return order_index()
-    else:
         # filter theo name hoặc product_code chứa searchKey
-        orders = OrderDetail.query.filter(
-            or_(
-                OrderDetail.order_code.ilike(f"%{searchKey}%"),
-                OrderDetail.store_name.ilike(f"%{searchKey}%"),
-                OrderDetail.delivery_company.ilike(f"%{searchKey}%"),
-                OrderDetail.receiver_name.ilike(f"%{searchKey}%"),
-                OrderDetail.order_status.ilike(f"%{searchKey}%"),
-                OrderDetail.delivery_tracking_code.ilike(f"%{searchKey}%"),
-            )
-        ).order_by(desc(OrderDetail.send_date)).all()
+    orders = OrderDetail.query.filter(
+        or_(
+            OrderDetail.order_code.ilike(f"%{searchKey}%"),
+            OrderDetail.store_name.ilike(f"%{searchKey}%"),
+            OrderDetail.delivery_company.ilike(f"%{searchKey}%"),
+            OrderDetail.receiver_name.ilike(f"%{searchKey}%"),
+            OrderDetail.delivery_tracking_code.ilike(f"%{searchKey}%"),
+        )
+    ).order_by(desc(OrderDetail.send_date)).all()
 
-    return render_template("orders_by_date.html", orders=orders, brand="uniqlo")
+    # Group theo ngày bằng Python
+    grouped = defaultdict(list)
+    for o in orders:
+        day = o.update_date.date()  # chỉ lấy yyyy-mm-dd
+        grouped[day].append(o)
+
+    # Chuyển thành list để dễ render
+    summary = [
+        {"order_date": day, "orders": items}
+        for day, items in sorted(grouped.items(), reverse=True)
+    ]
+
+    return render_template("orders_by_date.html", summary=summary, store_name="Kết quả tìm kiếm", brand="uniqlo")
 
 
 @main.route("/scan-email")

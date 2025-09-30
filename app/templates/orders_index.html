@@ -202,32 +202,6 @@
 
     </style>
     <style>
-        html {
-            scroll-behavior: smooth;
-        }
-
-        .btn-top {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background-color: #319dab;
-            color: white;
-            padding: 10px 15px;
-            border-radius: 5%;
-            font-size: 15px;
-            text-align: center;
-            text-decoration: none;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-            transition: background-color 0.3s, transform 0.2s;
-            z-index: 999;
-        }
-
-        .btn-top:hover {
-            background-color: #247b8a;
-            transform: scale(1.1);
-        }
-    </style>
-    <style>
         .summary-list {
             display: flex;
             flex-direction: column;
@@ -251,7 +225,7 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.12);
         }
 
-        .summary-day {
+        .summary-order {
             font-weight: bold;
             color: #319dab;
         }
@@ -284,18 +258,26 @@
 </nav>
 
 <div class="container">
-    <h1>Tổng hợp đơn hàng theo ngày</h1>
+    <h1 style="color: #e65e3c; margin: 0; width: 30rem ">Tổng hợp đơn hàng</h1>
     <div class="summary-list">
         {% for item in summary %}
         <div class="summary-item">
-            <a class="summary-day">Ngày {{ item.day }}</a>
-            <a href="/order-by-date?date={{item.day}}" class="summary-count">{{ item.count }} mail</a>
+            <a class="summary-order">
+                {% if item.store_name == 'ORDER_SUCCESS' %}
+                Đơn hàng đã đặt
+                {% elif item.store_name == 'DELIVERY_TO_STOCK' %}
+                Hàng gửi về kho
+                {% else %}
+                {{ item.store_name }}
+                {% endif %}
+            </a>
+            <a href="/order-by-store?store={{item.store_name if item.store_name}}" class="summary-count">{{
+                item.order_count }} mail</a>
         </div>
         {% endfor %}
     </div>
 </div>
 
-<a href="#" class="btn-top">↑ Lên đầu trang</a>
 <footer>
     &copy; 2025 Uniqlo Products. All rights reserved.
 </footer>

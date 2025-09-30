@@ -2,14 +2,12 @@ from __future__ import print_function
 import base64
 import os.path
 
-from click import DateTime
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from email.utils import parsedate_to_datetime
 import re
-from datetime import datetime
 
 # Quyền cần để đọc Gmail
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
@@ -71,7 +69,7 @@ def get_order_detail():
     from app.models import OrderDetail
 
     # Tìm tất cả email của Uniqlo có chữ "ご注文を受付けました" (đặt hàng thành công)
-    uniqlo_emails = search_emails('from:(noreply-order@ml.store.uniqlo.com) "ご注文を受付けました" newer_than:6d')
+    uniqlo_emails = search_emails('from:(noreply-order@ml.store.uniqlo.com) "ご注文を受付けました" newer_than:10d')
     # return uniqlo_emails
     for e in uniqlo_emails:
         send_date = parsedate_to_datetime(e['date']).replace(tzinfo=None).strftime("%Y-%m-%d %H:%M:%S")
@@ -92,7 +90,7 @@ def get_order_detail():
             new_order = OrderDetail(
                 send_date=send_date,
                 mail_content=mail_content,
-                update_date=datetime.now(),
+                update_date=send_date,
                 sender="noreply-order@ml.store.uniqlo.com",
                 receiver_name=receiver_name,
                 order_code=order_code,
@@ -110,13 +108,13 @@ def update_order_detail():
 
     # Tìm tất cả email của Uniqlo có chữ "ご注文商品の出荷準備が完了しました" (đặt hàng thành công)
     ready_to_delivery_emails = search_emails(
-        'from:(noreply-order@ml.store.uniqlo.com) "ご注文商品の出荷準備が完了しました" newer_than:6d')
+        'from:(noreply-order@ml.store.uniqlo.com) "ご注文商品の出荷準備が完了しました" newer_than:10d')
     ready_to_take_out_emails = search_emails(
-        'from:(noreply-order@ml.store.uniqlo.com) "ご注文商品準備完了のお知らせ" newer_than:6d')
+        'from:(noreply-order@ml.store.uniqlo.com) "ご注文商品準備完了のお知らせ" newer_than:10d')
     delivered_emails = search_emails(
-        'from:(mail@kuronekoyamato.co.jp) "お荷物お届け完了のお知らせ" newer_than:6d')
+        'from:(mail@kuronekoyamato.co.jp) "お荷物お届け完了のお知らせ" newer_than:10d')
     canceled_emails = search_emails(
-        'from:(noreply-order@ml.store.uniqlo.com) "ご注文をキャンセルしました" newer_than:6d')
+        'from:(noreply-order@ml.store.uniqlo.com) "ご注文をキャンセルしました" newer_than:10d')
 
     for e in ready_to_delivery_emails:
         update_date = parsedate_to_datetime(e['date']).replace(tzinfo=None).strftime("%Y-%m-%d %H:%M:%S")
