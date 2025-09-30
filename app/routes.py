@@ -2,9 +2,9 @@ import threading
 from collections import defaultdict
 
 from flask import Blueprint, render_template, request, redirect, url_for, jsonify
-from sqlalchemy import desc, or_, asc, func, and_
+from sqlalchemy import desc, or_, asc, and_
 
-from app.google_mail_service import get_order_detail, update_order_detail
+from scraper import google_mail_service
 from app.models import Product, OrderDetail
 from scraper import uniqlo_crawl
 from app.const import *
@@ -227,8 +227,9 @@ def search_order():
 @main.route("/scan-email")
 def update_all_email_data():
     try:
-        get_order_detail()
-        update_order_detail()
+        t = threading.Thread(target=google_mail_service.start_scan_email)
+        t.daemon = True  # Thread tự kết thúc khi app tắt
+        t.start()
         return redirect(url_for("main.order_index"))
     except Exception as e:
         return f"Lỗi: {str(e)}"

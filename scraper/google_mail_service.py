@@ -1,6 +1,7 @@
 from __future__ import print_function
 import base64
 import os.path
+import time
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -193,3 +194,12 @@ def update_order_detail():
             db.session.add(order)
 
     db.session.commit()
+
+
+def start_scan_email():
+    from run import app
+
+    with app.app_context():
+        get_order_detail()
+        time.sleep(30)
+        update_order_detail()
