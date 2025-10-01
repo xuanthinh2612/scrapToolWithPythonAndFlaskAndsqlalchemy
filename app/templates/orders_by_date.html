@@ -337,6 +337,11 @@
     </div>
     <div class="categories">
         <a href="/orders" style="background-color: #e65e3c;">Quay lại danh sách đơn hàng</a>
+        {% if request.path.startswith('/order-by-store-and-create-date') %}
+            <a href="/order-by-store?store={{ store_name }}">Sắp xếp theo ngày update</a>
+        {% elif request.path.startswith('/order-by-store') %}
+            <a href="/order-by-store-and-create-date?store={{ store_name }}">Sắp xếp theo ngày đặt</a>
+        {% endif %}
     </div>
     <form action="/orders/search" method="post">
         <input type="text" name="searchKey" id="searchKey" placeholder="mã đơn hàng, tên, mã vẫn chuyển...">
@@ -407,10 +412,10 @@
                         <td>
                             <input type="checkbox" name="selected_orders" value="{{ o.id }}"
                                    {% if o.order_status=='completed' %}
-                                       checked disabled
+                                   checked disabled
                                    {% elif o.order_status in ['ordered', 'ready_to_delivery', 'canceled'] %}
-                                        disabled
-                                   {% endif %}
+                            disabled
+                            {% endif %}
                             >
                         </td>
                     </tr>

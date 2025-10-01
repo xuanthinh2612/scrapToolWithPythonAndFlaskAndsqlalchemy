@@ -136,14 +136,14 @@ def order_by_store():
     store_name = request.args.get("store")
 
     if store_name:  # nếu store_name không rỗng => filter theo store_name
-        if store_name == "ORDER_SUCCESS":
+        if store_name == ORDER_SUCCESS:
             query = OrderDetail.query.filter(
                 and_(
                     OrderDetail.store_name.is_(None),  # store_name IS NULL
                     OrderDetail.delivery_tracking_code.is_(None)  # delivery_tracking_code IS NULL
                 )
             ).order_by(desc(OrderDetail.update_date))
-        elif store_name == "DELIVERY_TO_STOCK":
+        elif store_name == DELIVERY_TO_STOCK:
             query = OrderDetail.query.filter(
                 and_(
                     OrderDetail.store_name.is_(None),  # store_name IS NULL
@@ -171,6 +171,48 @@ def order_by_store():
 
     return render_template("orders_by_date.html", summary=summary, store_name=store_name or "Đặt về kho",
                            brand="uniqlo")
+
+
+@main.route("/order-by-store-and-create-date")
+def order_by_store_and_create_date():
+    # Lấy ngày từ query string, mặc định hôm nay
+    store_name = request.args.get("store")
+
+    if store_name:  # nếu store_name không rỗng => filter theo store_name
+        if store_name == ORDER_SUCCESS:
+            query = OrderDetail.query.filter(
+                and_(
+                    OrderDetail.store_name.is_(None),  # store_name IS NULL
+                    OrderDetail.delivery_tracking_code.is_(None)  # delivery_tracking_code IS NULL
+                )
+            ).order_by(desc(OrderDetail.send_date))
+        elif store_name == DELIVERY_TO_STOCK:
+            query = OrderDetail.query.filter(
+                and_(
+                    OrderDetail.store_name.is_(None),  # store_name IS NULL
+                    OrderDetail.delivery_tracking_code.isnot(None)  # delivery_tracking_code IS NOT NULL
+                )
+            ).order_by(desc(OrderDetail.send_date))
+        else:
+            query = OrderDetail.query.filter_by(store_name=store_name).order_by(desc(OrderDetail.send_date))
+    else:  # nếu store_name rỗng hoặc None => lấy các record store_name IS NULL
+        query = OrderDetail.query.filter(OrderDetail.store_name.is_(None)).order_by(desc(OrderDetail.send_date))
+
+    orders_by_store = query.limit(LIMIT_NUMBER).all()
+
+    # Group theo ngày bằng Python
+    grouped = defaultdict(list)
+    for o in orders_by_store:
+        day = o.send_date.date()  # chỉ lấy yyyy-mm-dd
+        grouped[day].append(o)
+
+    # Chuyển thành list để dễ render
+    summary = [
+        {"order_date": day, "orders": items}
+        for day, items in sorted(grouped.items(), reverse=True)
+    ]
+
+    return render_template("orders_by_date.html", summary=summary, store_name=store_name, brand="uniqlo")
 
 
 @main.route("/orders/update-status", methods=["POST"])

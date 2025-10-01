@@ -10,6 +10,8 @@ from googleapiclient.discovery import build
 from email.utils import parsedate_to_datetime
 import re
 
+from app.const import MAX_RESULTS
+
 # Quyền cần để đọc Gmail
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
 
@@ -31,37 +33,54 @@ def get_service():
     return build('gmail', 'v1', credentials=creds)
 
 
-def search_emails(query):
+def search_emails(query, max_results=MAX_RESULTS):
     service = get_service()
-    results = service.users().messages().list(userId='me', q=query).execute()
-    messages = results.get('messages', [])
     emails = []
-    for msg in messages:
-        txt = service.users().messages().get(userId='me', id=msg['id']).execute()
-        payload = txt['payload']
-        headers = payload.get('headers')
-        subject = None
-        date = None
-        for h in headers:
-            if h['name'] == 'Subject':
-                subject = h['value']
-            if h['name'] == 'Date':
-                date = h['value']
+    page_token = None
 
-        parts = payload.get('parts')
-        body = ""
-        if parts:
-            for part in parts:
-                if part['mimeType'] == 'text/plain':
-                    body = base64.urlsafe_b64decode(part['body']['data']).decode()
-        else:
-            body = base64.urlsafe_b64decode(payload['body']['data']).decode()
+    while len(emails) < max_results:
+        results = service.users().messages().list(
+            userId='me',
+            q=query,
+            maxResults=100,  # Gmail API giới hạn tối đa 100 / lần
+            pageToken=page_token
+        ).execute()
 
-        emails.append({
-            'subject': subject,
-            'date': date,
-            'body': body
-        })
+        messages = results.get('messages', [])
+        for msg in messages:
+            if len(emails) >= max_results:
+                break
+            txt = service.users().messages().get(userId='me', id=msg['id']).execute()
+            payload = txt['payload']
+            headers = payload.get('headers', [])
+            subject, date = None, None
+            for h in headers:
+                if h['name'] == 'Subject':
+                    subject = h['value']
+                if h['name'] == 'Date':
+                    date = h['value']
+
+            parts = payload.get('parts')
+            body = ""
+            if parts:
+                for part in parts:
+                    if part['mimeType'] == 'text/plain' and 'data' in part['body']:
+                        body = base64.urlsafe_b64decode(part['body']['data']).decode()
+                        break
+            else:
+                if 'data' in payload['body']:
+                    body = base64.urlsafe_b64decode(payload['body']['data']).decode()
+
+            emails.append({
+                'subject': subject,
+                'date': date,
+                'body': body
+            })
+
+        page_token = results.get('nextPageToken')
+        if not page_token:
+            break
+
     return emails
 
 
@@ -198,8 +217,12 @@ def update_order_detail():
 
 def start_scan_email():
     from run import app
+    from datetime import datetime
 
+    print("Scanning email...", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     with app.app_context():
         get_order_detail()
         time.sleep(30)
         update_order_detail()
+
+    print("Scanning completed at: ", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
