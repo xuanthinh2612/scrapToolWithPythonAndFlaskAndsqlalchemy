@@ -177,7 +177,7 @@ def update_order_detail():
         receive_dead_line = receive_dead_line_match.group(1).strip() if receive_dead_line_match else None
 
         order = OrderDetail.query.filter_by(order_code=order_code).first()
-        if order:
+        if order and order.order_status != "ready_to_receive":
             order.order_status = "ready_to_receive"
             order.store_name = store_name
             order.receive_dead_line = receive_dead_line

@@ -396,7 +396,13 @@
                         <td>{{ o.receiver_name }}</td>
                         <td>{{ o.order_code }}</td>
                         <td>{{ o.store_name if o.store_name else "-" }}</td>
-                        <td>{{ o.delivery_plan }}</td>
+                        <td>
+                            {% if store_name in ['ORDER_SUCCESS', 'DELIVERY_TO_STOCK'] %}
+                                {{ o.delivery_plan }}
+                            {% else %}
+                                Hạn lấy: {{ o.receive_dead_line.date() }}
+                            {% endif %}
+                        </td>
                         <td>{{ o.delivery_company if o.delivery_company else "-" }}</td>
                         <td>{{ o.delivery_tracking_code if o.delivery_company else "-" }}</td>
                         <td>
