@@ -153,7 +153,7 @@ def update_order_detail():
         delivery_tracking_code = delivery_tracking_code_match.group(1).strip() if delivery_tracking_code_match else None
 
         order = OrderDetail.query.filter_by(order_code=order_code).first()
-        if order:
+        if order and order.order_status in ["ordered"]:
             order.order_status = "ready_to_delivery"
             order.update_date = update_date
             order.delivery_company = delivery_company
@@ -177,7 +177,7 @@ def update_order_detail():
         receive_dead_line = receive_dead_line_match.group(1).strip() if receive_dead_line_match else None
 
         order = OrderDetail.query.filter_by(order_code=order_code).first()
-        if order and order.order_status != "ready_to_receive":
+        if order and order.order_status in ["ordered"]:
             order.order_status = "ready_to_receive"
             order.store_name = store_name
             order.receive_dead_line = receive_dead_line
@@ -193,7 +193,7 @@ def update_order_detail():
         delivery_tracking_code = delivery_tracking_code_match.group(1).strip() if delivery_tracking_code_match else None
 
         order = OrderDetail.query.filter_by(delivery_tracking_code=delivery_tracking_code).first()
-        if order:
+        if order and order.order_status in ["ready_to_delivery"]:
             order.order_status = "completed"
             order.update_date = update_date
             db.session.add(order)
@@ -207,7 +207,7 @@ def update_order_detail():
         order_code = order_code_match.group(1).strip() if order_code_match else None
 
         order = OrderDetail.query.filter_by(order_code=order_code).first()
-        if order:
+        if order and order.order_status not in ["canceled"]:
             order.order_status = "canceled"
             order.update_date = update_date
             db.session.add(order)
