@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" xmlns="http://www.w3.org/1999/html">
 
 <head>
     <meta charset="UTF-8">
@@ -199,7 +199,7 @@
 
         table th,
         table td {
-            padding: 0.75rem 1rem;
+            padding: 0.75rem 0.75rem;
             text-align: left;
             border-bottom: 1px solid #ddd;
         }
@@ -338,9 +338,9 @@
     <div class="categories">
         <a href="/orders" style="background-color: #e65e3c;">Quay lại danh sách đơn hàng</a>
         {% if request.path.startswith('/order-by-store-and-create-date') %}
-            <a href="/order-by-store?store={{ store_name }}">Sắp xếp theo ngày update</a>
+        <a href="/order-by-store?store={{ store_name }}">Sắp xếp theo ngày update</a>
         {% elif request.path.startswith('/order-by-store') %}
-            <a href="/order-by-store-and-create-date?store={{ store_name }}">Sắp xếp theo ngày đặt</a>
+        <a href="/order-by-store-and-create-date?store={{ store_name }}">Sắp xếp theo ngày đặt</a>
         {% endif %}
     </div>
     <form action="/orders/search" method="post">
@@ -380,10 +380,21 @@
                         <th>Ngày đặt</th>
                         <th>Người nhận</th>
                         <th>Order Code</th>
+                        {% if store_name in ['DELIVERY_TO_STOCK'] %}
+                        <th>Vận chuyển</th>
+                        {% elif store_name in ['ORDER_SUCCESS'] %}
                         <th>Shop</th>
-                        <th>Dự kiến giao</th>
-                        <th>Cty Giao hàng</th>
-                        <th>Mã vận chuyển</th>
+                        <th>Vận chuyển</th>
+                        {% else %}
+                        <th>Shop</th>
+                        {% endif %}
+                        <th>
+                            {% if store_name in ['ORDER_SUCCESS', 'DELIVERY_TO_STOCK'] %}
+                            Dự kiến giao hàng
+                            {% else %}
+                            Hạn lấy hàng
+                            {% endif %}
+                        </th>
                         <th>Tình trạng đơn</th>
                         <th>Done</th>
                     </tr>
@@ -395,18 +406,26 @@
                         <td>{{ o.send_date.date() }}</td>
                         <td>{{ o.receiver_name }}</td>
                         <td>{{ o.order_code }}</td>
+                        {% if store_name in ['DELIVERY_TO_STOCK'] %}
+                        <td>
+                            {{ o.delivery_company if o.delivery_company else "-" }}
+                            {{ o.delivery_tracking_code if o.delivery_company}}
+                        </td>
+                        {% elif store_name in ['ORDER_SUCCESS'] %}
+                        <td>-</td>
+                        <td>-</td>
+                        {% else %}
                         <td>{{ o.store_name if o.store_name else "-" }}</td>
+                        {% endif %}
                         <td>
                             {% if store_name in ['ORDER_SUCCESS', 'DELIVERY_TO_STOCK'] %}
-                                {{ o.delivery_plan }}
+                            {{ o.delivery_plan }}
                             {% else %}
-                                Hạn lấy: {{ o.receive_dead_line.date() }}
+                            {{ o.receive_dead_line.date() }}
                             {% endif %}
                         </td>
-                        <td>{{ o.delivery_company if o.delivery_company else "-" }}</td>
-                        <td>{{ o.delivery_tracking_code if o.delivery_company else "-" }}</td>
                         <td>
-                            <span class="status {% if o.order_status == 'done' %}done{% else %}pending{% endif %}">
+                            <span class="status {% if o.order_status == 'completed' %}done{% else %}pending{% endif %}">
                                 {% if o.order_status == 'ordered' %}Đã_đặt_hàng
                                 {% elif o.order_status == 'ready_to_delivery' %}Đang_gửi_về_kho
                                 {% elif o.order_status == 'ready_to_receive' %}Hàng_đã_về_shop
