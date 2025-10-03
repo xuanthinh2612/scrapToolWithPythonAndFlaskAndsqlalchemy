@@ -8,6 +8,7 @@ migrate = Migrate()
 
 def create_app():
     app = Flask(__name__)
+    app.secret_key = "your_secret_key"  # đặt secret key bất kỳ
 
     # Cấu hình MySQL
     app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+mysqlconnector://root:1010@localhost:3306/uniqlo"

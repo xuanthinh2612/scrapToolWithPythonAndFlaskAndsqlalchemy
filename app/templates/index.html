@@ -227,7 +227,14 @@
             transform: scale(1.1);
         }
     </style>
-
+    <style>
+        .flash-message.success {
+            background-color: #e6ffed;
+            border: 1px solid #28a745;
+            color: #155724;
+            padding: 0.5rem
+        }
+    </style>
 </head>
 
 <body>
@@ -253,6 +260,15 @@
 </nav>
 
 <div class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="flash-message {{ category }}">
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
     <h3>Danh sách sản phẩm (Tổng: {{ products|length }})</h3>
     <table id="productTable">
         <thead>

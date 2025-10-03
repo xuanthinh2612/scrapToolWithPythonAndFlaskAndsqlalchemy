@@ -238,6 +238,14 @@
             font-size: 0.9rem;
         }
     </style>
+    <style>
+        .flash-message.success {
+            background-color: #e6ffed;
+            border: 1px solid #28a745;
+            color: #155724;
+            padding: 0.5rem
+        }
+    </style>
 
 </head>
 
@@ -258,6 +266,15 @@
 </nav>
 
 <div class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="flash-message {{ category }}">
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
     <h1 style="color: #e65e3c; margin: 0; width: 30rem ">Tổng hợp đơn hàng</h1>
     <div class="summary-list">
         {% for item in summary %}

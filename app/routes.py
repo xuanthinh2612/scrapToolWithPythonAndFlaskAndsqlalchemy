@@ -1,7 +1,7 @@
 import threading
 from collections import defaultdict
 
-from flask import Blueprint, render_template, request, redirect, url_for, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, jsonify, flash
 from sqlalchemy import desc, or_, asc, and_
 
 from scraper import google_mail_service
@@ -70,7 +70,7 @@ def crawl_uniqlo_route():
         t = threading.Thread(target=uniqlo_crawl.start_crawl_uniqlo)
         t.daemon = True  # Thread tự kết thúc khi app tắt
         t.start()
-
+        flash("Đã bắt đầu scan dữ liệu!", "success")  # gửi message
         return redirect(url_for("main.index"))
     except Exception as e:
         return f"Lỗi: {str(e)}"
@@ -272,6 +272,7 @@ def update_all_email_data():
         t = threading.Thread(target=google_mail_service.start_scan_email)
         t.daemon = True  # Thread tự kết thúc khi app tắt
         t.start()
+        flash("Đang scan mail! quay lại sau 5 phút nữa", "success")  # gửi message
         return redirect(url_for("main.order_index"))
     except Exception as e:
         return f"Lỗi: {str(e)}"
