@@ -97,7 +97,7 @@ def order_index():
         summary = [{'store_name': r.store_name, 'order_count': r.order_count} for r in results]
 
         # Các order gửi về kho
-        deliver_to_stock_orders = OrderDetail.query.filter_by(order_status="ready_to_delivery").order_by(
+        deliver_to_stock_orders = OrderDetail.query.filter_by(order_status=READY_TO_DELIVERY_STATUS).order_by(
             desc(OrderDetail.update_date)).all()
         summary.append({
             'store_name': DELIVERY_TO_STOCK,
@@ -105,7 +105,7 @@ def order_index():
         })
 
         # Các order đã đặt thành công (không có tracking_code)
-        ordered_success_orders = OrderDetail.query.filter_by(order_status="ordered").order_by(
+        ordered_success_orders = OrderDetail.query.filter_by(order_status=ORDERED_STATUS).order_by(
             desc(OrderDetail.update_date)).all()
         summary.append({
             'store_name': ORDER_SUCCESS,
@@ -124,7 +124,7 @@ def order_by_store():
     store_name = request.args.get("store")
 
     if store_name == ORDER_SUCCESS:
-        query = OrderDetail.query.filter_by(order_status="ordered").order_by(
+        query = OrderDetail.query.filter_by(order_status=ORDERED_STATUS).order_by(
             desc(OrderDetail.update_date))
     elif store_name == DELIVERY_TO_STOCK:
         query = OrderDetail.query.filter(
@@ -156,7 +156,7 @@ def order_by_store_and_create_date():
     store_name = request.args.get("store")
 
     if store_name == ORDER_SUCCESS:
-        query = OrderDetail.query.filter_by(order_status="ordered").order_by(
+        query = OrderDetail.query.filter_by(order_status=ORDERED_STATUS).order_by(
             desc(OrderDetail.update_date))
     elif store_name == DELIVERY_TO_STOCK:
         query = OrderDetail.query.filter(
@@ -193,7 +193,7 @@ def update_order_status():
 
     # Cập nhật status thành 'completed'
     OrderDetail.query.filter(OrderDetail.id.in_(order_ids)).update(
-        {"order_status": "completed"}, synchronize_session=False
+        {"order_status": COMPLETED_STATUS}, synchronize_session=False
     )
     db.session.commit()
 

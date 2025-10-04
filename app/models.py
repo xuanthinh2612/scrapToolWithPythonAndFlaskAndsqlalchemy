@@ -17,7 +17,6 @@ class Product(db.Model):
 
 
 class OrderDetail(db.Model):
-    status = ["ordered", "ready_to_delivery", "ready_to_receive", "completed", "canceled"]
     id = Column(Integer, primary_key=True, autoincrement=True)
     send_date = Column(DateTime())
     update_date = Column(DateTime())

@@ -10,7 +10,7 @@ from googleapiclient.discovery import build
 from email.utils import parsedate_to_datetime
 import re
 
-from app.const import MAX_RESULTS
+from app.const import *
 
 # Quyền cần để đọc Gmail
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
@@ -115,7 +115,7 @@ def get_order_detail():
                 receiver_name=receiver_name,
                 order_code=order_code,
                 delivery_plan=delivery_plan,
-                order_status="ordered"
+                order_status=ORDERED_STATUS
 
             )
             db.session.add(new_order)
@@ -156,8 +156,8 @@ def update_order_detail():
         delivery_tracking_link = delivery_tracking_link_match.group()
 
         order = OrderDetail.query.filter_by(order_code=order_code).first()
-        if order and order.order_status in ["ordered"]:
-            order.order_status = "ready_to_delivery"
+        if order and order.order_status in [ORDERED_STATUS]:
+            order.order_status = READY_TO_DELIVERY_STATUS
             order.update_date = update_date
             order.delivery_company = delivery_company
             order.delivery_tracking_code = delivery_tracking_code
@@ -181,8 +181,8 @@ def update_order_detail():
         receive_dead_line = receive_dead_line_match.group(1).strip() if receive_dead_line_match else None
 
         order = OrderDetail.query.filter_by(order_code=order_code).first()
-        if order and order.order_status in ["ordered"]:
-            order.order_status = "ready_to_receive"
+        if order and order.order_status in [ORDERED_STATUS]:
+            order.order_status = READY_TO_RECEIVE_STATUS
             order.store_name = store_name
             order.receive_dead_line = receive_dead_line
             order.update_date = update_date
@@ -198,8 +198,8 @@ def update_order_detail():
                                   .replace("-", "")) if delivery_tracking_code_match else None
 
         order = OrderDetail.query.filter_by(delivery_tracking_code=delivery_tracking_code).first()
-        if order and order.order_status in ["ready_to_delivery"]:
-            order.order_status = "completed"
+        if order and order.order_status in [READY_TO_DELIVERY_STATUS]:
+            order.order_status = COMPLETED_STATUS
             order.update_date = update_date
             db.session.add(order)
 
@@ -212,8 +212,8 @@ def update_order_detail():
         order_code = order_code_match.group(1).strip() if order_code_match else None
 
         order = OrderDetail.query.filter_by(order_code=order_code).first()
-        if order and order.order_status not in ["canceled"]:
-            order.order_status = "canceled"
+        if order and order.order_status not in [CANCELED_STATUS]:
+            order.order_status = CANCELED_STATUS
             order.update_date = update_date
             db.session.add(order)
 
