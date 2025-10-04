@@ -31,4 +31,5 @@ class OrderDetail(db.Model):
     receive_dead_line = Column(DateTime())
     delivery_company = Column(String(50))
     delivery_tracking_code = Column(String(50))
+    delivery_tracking_link = Column(String(500))
     order_status = Column(String(50))

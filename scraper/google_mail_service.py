@@ -143,7 +143,9 @@ def update_order_detail():
         order_pattern = r"ご注文番号：([0-9\-]+)"
         company_pattern = r"配送会社：(.+)"
         tracking_pattern = r"配送伝票番号：([0-9]+)"
+        delivery_tracking_link_pattern = r"https?://toi\.kuronekoyamato\.co\.jp/cgi-bin/tneko\?[\w=&]+"
 
+        delivery_tracking_link_match = re.search(delivery_tracking_link_pattern, mail_content)
         order_code_match = re.search(order_pattern, mail_content)
         delivery_company_match = re.search(company_pattern, mail_content)
         delivery_tracking_code_match = re.search(tracking_pattern, mail_content)
@@ -151,6 +153,7 @@ def update_order_detail():
         order_code = order_code_match.group(1).strip() if order_code_match else None
         delivery_company = delivery_company_match.group(1).strip() if delivery_company_match else None
         delivery_tracking_code = delivery_tracking_code_match.group(1).strip() if delivery_tracking_code_match else None
+        delivery_tracking_link = delivery_tracking_link_match.group()
 
         order = OrderDetail.query.filter_by(order_code=order_code).first()
         if order and order.order_status in ["ordered"]:
@@ -158,6 +161,7 @@ def update_order_detail():
             order.update_date = update_date
             order.delivery_company = delivery_company
             order.delivery_tracking_code = delivery_tracking_code
+            order.delivery_tracking_link = delivery_tracking_link
             db.session.add(order)
 
     for e in ready_to_take_out_emails:

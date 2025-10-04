@@ -409,7 +409,13 @@
                         {% if store_name in ['DELIVERY_TO_STOCK'] %}
                         <td>
                             {{ o.delivery_company if o.delivery_company else "-" }}
+                            {% if o.delivery_tracking_link %}
+                            <a href="{{ o.delivery_tracking_link }}" target="_blankw">{{
+                                o.delivery_tracking_code if o.delivery_company}}</a>
+                            {% else %}
                             {{ o.delivery_tracking_code if o.delivery_company}}
+                            {% endif %}
+
                         </td>
                         {% elif store_name in ['ORDER_SUCCESS'] %}
                         <td>-</td>
@@ -418,7 +424,8 @@
                         <td>{{ o.store_name if o.store_name else "-" }}</td>
                         <td>
                             {{ o.delivery_company if o.delivery_company else "-" }}
-                            {{ o.delivery_tracking_code if o.delivery_company}}
+                            <a href="{{ o.delivery_tracking_link if o.delivery_tracking_link }}">{{
+                                o.delivery_tracking_code if o.delivery_company}}</a>
                         </td>
                         {% else %}
                         <td>{{ o.store_name if o.store_name else "-" }}</td>
@@ -444,9 +451,9 @@
                             <input type="checkbox" name="selected_orders" value="{{ o.id }}"
                                    {% if o.order_status=='completed' %}
                                    checked disabled
-                                   {% elif o.order_status in ['ordered', 'ready_to_delivery', 'canceled'] %}
-                            disabled
-                            {% endif %}
+                                   {% elif o.order_status in ['ordered', 'canceled'] %}
+                                    disabled
+                                    {% endif %}
                             >
                         </td>
                     </tr>

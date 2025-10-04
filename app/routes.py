@@ -92,33 +92,21 @@ def order_index():
                 )
             ).label('order_count')
         ).filter(OrderDetail.store_name.isnot(None)) \
-            .group_by(OrderDetail.store_name) \
-            .order_by(desc(OrderDetail.store_name)) \
-            .all()
+            .group_by(OrderDetail.store_name).order_by(desc(OrderDetail.update_date)).all()
 
         summary = [{'store_name': r.store_name, 'order_count': r.order_count} for r in results]
 
         # Các order gửi về kho
-        deliver_to_stock_orders = OrderDetail.query.filter(
-            and_(
-                OrderDetail.store_name.is_(None),
-                OrderDetail.delivery_tracking_code.isnot(None),
-                ~OrderDetail.order_status.in_(['completed', 'canceled'])
-            )
-        ).order_by(OrderDetail.update_date).all()
+        deliver_to_stock_orders = OrderDetail.query.filter_by(order_status="ready_to_delivery").order_by(
+            desc(OrderDetail.update_date)).all()
         summary.append({
             'store_name': DELIVERY_TO_STOCK,
             'order_count': len(deliver_to_stock_orders)
         })
 
         # Các order đã đặt thành công (không có tracking_code)
-        ordered_success_orders = OrderDetail.query.filter(
-            and_(
-                OrderDetail.store_name.is_(None),
-                OrderDetail.delivery_tracking_code.is_(None),
-                ~OrderDetail.order_status.in_(['completed', 'canceled'])
-            )
-        ).order_by(OrderDetail.update_date).all()
+        ordered_success_orders = OrderDetail.query.filter_by(order_status="ordered").order_by(
+            desc(OrderDetail.update_date)).all()
         summary.append({
             'store_name': ORDER_SUCCESS,
             'order_count': len(ordered_success_orders)
@@ -135,25 +123,14 @@ def order_by_store():
     # Lấy ngày từ query string, mặc định hôm nay
     store_name = request.args.get("store")
 
-    if store_name:  # nếu store_name không rỗng => filter theo store_name
-        if store_name == ORDER_SUCCESS:
-            query = OrderDetail.query.filter(
-                and_(
-                    OrderDetail.store_name.is_(None),  # store_name IS NULL
-                    OrderDetail.delivery_tracking_code.is_(None)  # delivery_tracking_code IS NULL
-                )
-            ).order_by(desc(OrderDetail.update_date))
-        elif store_name == DELIVERY_TO_STOCK:
-            query = OrderDetail.query.filter(
-                and_(
-                    OrderDetail.store_name.is_(None),  # store_name IS NULL
-                    OrderDetail.delivery_tracking_code.isnot(None)  # delivery_tracking_code IS NOT NULL
-                )
-            ).order_by(desc(OrderDetail.update_date))
-        else:
-            query = OrderDetail.query.filter_by(store_name=store_name).order_by(desc(OrderDetail.update_date))
-    else:  # nếu store_name rỗng hoặc None => lấy các record store_name IS NULL
-        query = OrderDetail.query.filter(OrderDetail.store_name.is_(None)).order_by(desc(OrderDetail.update_date))
+    if store_name == ORDER_SUCCESS:
+        query = OrderDetail.query.filter_by(order_status="ordered").order_by(
+            desc(OrderDetail.update_date))
+    elif store_name == DELIVERY_TO_STOCK:
+        query = OrderDetail.query.filter(
+            OrderDetail.delivery_tracking_code.isnot(None)).order_by(desc(OrderDetail.update_date))
+    else:
+        query = OrderDetail.query.filter_by(store_name=store_name).order_by(desc(OrderDetail.update_date))
 
     orders_by_store = query.limit(LIMIT_NUMBER).all()
 
@@ -178,25 +155,14 @@ def order_by_store_and_create_date():
     # Lấy ngày từ query string, mặc định hôm nay
     store_name = request.args.get("store")
 
-    if store_name:  # nếu store_name không rỗng => filter theo store_name
-        if store_name == ORDER_SUCCESS:
-            query = OrderDetail.query.filter(
-                and_(
-                    OrderDetail.store_name.is_(None),  # store_name IS NULL
-                    OrderDetail.delivery_tracking_code.is_(None)  # delivery_tracking_code IS NULL
-                )
-            ).order_by(desc(OrderDetail.send_date))
-        elif store_name == DELIVERY_TO_STOCK:
-            query = OrderDetail.query.filter(
-                and_(
-                    OrderDetail.store_name.is_(None),  # store_name IS NULL
-                    OrderDetail.delivery_tracking_code.isnot(None)  # delivery_tracking_code IS NOT NULL
-                )
-            ).order_by(desc(OrderDetail.send_date))
-        else:
-            query = OrderDetail.query.filter_by(store_name=store_name).order_by(desc(OrderDetail.send_date))
-    else:  # nếu store_name rỗng hoặc None => lấy các record store_name IS NULL
-        query = OrderDetail.query.filter(OrderDetail.store_name.is_(None)).order_by(desc(OrderDetail.send_date))
+    if store_name == ORDER_SUCCESS:
+        query = OrderDetail.query.filter_by(order_status="ordered").order_by(
+            desc(OrderDetail.update_date))
+    elif store_name == DELIVERY_TO_STOCK:
+        query = OrderDetail.query.filter(
+            OrderDetail.delivery_tracking_code.isnot(None)).order_by(desc(OrderDetail.update_date))
+    else:
+        query = OrderDetail.query.filter_by(store_name=store_name).order_by(desc(OrderDetail.update_date))
 
     orders_by_store = query.limit(LIMIT_NUMBER).all()
 
