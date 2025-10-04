@@ -190,7 +190,8 @@ def update_order_detail():
         # Regex patterns
         tracking_pattern = r"送り状番号\s*([0-9\-]+)"
         delivery_tracking_code_match = re.search(tracking_pattern, mail_content)
-        delivery_tracking_code = delivery_tracking_code_match.group(1).strip() if delivery_tracking_code_match else None
+        delivery_tracking_code = (delivery_tracking_code_match.group(1).strip()
+                                  .replace("-", "")) if delivery_tracking_code_match else None
 
         order = OrderDetail.query.filter_by(delivery_tracking_code=delivery_tracking_code).first()
         if order and order.order_status in ["ready_to_delivery"]:

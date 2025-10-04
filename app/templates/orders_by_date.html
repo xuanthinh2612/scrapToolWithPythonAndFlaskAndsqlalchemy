@@ -382,7 +382,7 @@
                         <th>Order Code</th>
                         {% if store_name in ['DELIVERY_TO_STOCK'] %}
                         <th>Vận chuyển</th>
-                        {% elif store_name in ['ORDER_SUCCESS'] %}
+                        {% elif store_name in ['ORDER_SUCCESS', 'SEARCH'] %}
                         <th>Shop</th>
                         <th>Vận chuyển</th>
                         {% else %}
@@ -414,6 +414,12 @@
                         {% elif store_name in ['ORDER_SUCCESS'] %}
                         <td>-</td>
                         <td>-</td>
+                        {% elif store_name in ['SEARCH'] %}
+                        <td>{{ o.store_name if o.store_name else "-" }}</td>
+                        <td>
+                            {{ o.delivery_company if o.delivery_company else "-" }}
+                            {{ o.delivery_tracking_code if o.delivery_company}}
+                        </td>
                         {% else %}
                         <td>{{ o.store_name if o.store_name else "-" }}</td>
                         {% endif %}
@@ -421,7 +427,7 @@
                             {% if store_name in ['ORDER_SUCCESS', 'DELIVERY_TO_STOCK'] %}
                             {{ o.delivery_plan }}
                             {% else %}
-                            {{ o.receive_dead_line.date() }}
+                            {{ o.receive_dead_line.date() if o.receive_dead_line }}
                             {% endif %}
                         </td>
                         <td>

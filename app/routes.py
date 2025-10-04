@@ -263,7 +263,7 @@ def search_order():
         for day, items in sorted(grouped.items(), reverse=True)
     ]
 
-    return render_template("orders_by_date.html", summary=summary, store_name="Kết quả tìm kiếm", brand="uniqlo")
+    return render_template("orders_by_date.html", summary=summary, store_name="SEARCH", brand="uniqlo")
 
 
 @main.route("/scan-email")

@@ -3,3 +3,4 @@
 /app/_pycache_
 __pycache__/
 *.pyc
+.idea
