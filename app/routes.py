@@ -20,8 +20,10 @@ def index():
 @main.route("/uniqlo", methods=["GET"])
 def uniqlo_index():
     category = request.args.get("category", "women")
-    products = (Product.query.filter_by(category=category, type="uniqlo").order_by(desc(Product.discountFlg))
-                .order_by(asc(Product.current_price)).all())
+    products = (
+        Product.query.filter_by(category=category, type="uniqlo").order_by(desc((Product.follow_flag))).order_by(
+            desc(Product.discountFlg))
+        .order_by(asc(Product.current_price)).all())
     return render_template("index.html", products=products, brand="uniqlo")
 
 
@@ -34,7 +36,8 @@ def uniqlo_sale():
 @main.route("/gu", methods=["GET"])
 def gu_index():
     category = request.args.get("category", "women")
-    products = (Product.query.filter_by(category=category, type="gu").order_by(desc((Product.follow_flag))).order_by(desc(Product.discountFlg))
+    products = (Product.query.filter_by(category=category, type="gu").order_by(desc((Product.follow_flag))).order_by(
+        desc(Product.discountFlg))
                 .order_by(asc(Product.current_price)).all())
     return render_template("index.html", products=products, brand="gu")
 
