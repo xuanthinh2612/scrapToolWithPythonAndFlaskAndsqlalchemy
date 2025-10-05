@@ -34,7 +34,7 @@ def uniqlo_sale():
 @main.route("/gu", methods=["GET"])
 def gu_index():
     category = request.args.get("category", "women")
-    products = (Product.query.filter_by(category=category, type="gu").order_by(desc(Product.discountFlg))
+    products = (Product.query.filter_by(category=category, type="gu").order_by(desc((Product.follow_flag))).order_by(desc(Product.discountFlg))
                 .order_by(asc(Product.current_price)).all())
     return render_template("index.html", products=products, brand="gu")
 
@@ -43,6 +43,12 @@ def gu_index():
 def gu_sale():
     products = Product.query.filter_by(discountFlg=True, type="gu").order_by(asc(Product.current_price)).all()
     return render_template("index.html", products=products, brand="gu")
+
+
+@main.route("/follow-product", methods=["GET"])
+def follow_product():
+    products = Product.query.filter_by(follow_flag=True).order_by(asc(Product.current_price)).all()
+    return render_template("index.html", products=products, brand="uniqlo")
 
 
 @main.route("/search", methods=["POST"])
@@ -61,6 +67,26 @@ def search():
         ).order_by(desc(Product.discountFlg)).order_by(asc(Product.current_price)).all()
 
     return render_template("index.html", products=products, brand="uniqlo")
+
+
+@main.route("/toggle-follow", methods=["POST"])
+def toggle_follow():
+    from app import db
+    data = request.get_json()
+    product_id = data.get("product_id")
+
+    if not product_id:
+        return jsonify({"message": "Thiếu ID sản phẩm"}), 400
+
+    product = Product.query.get(product_id)
+    if not product:
+        return jsonify({"message": "Không tìm thấy sản phẩm"}), 404
+
+    product.follow_flag = not product.follow_flag  # Đảo trạng thái
+    db.session.commit()
+
+    status = "followed" if product.follow_flag else "unfollowed"
+    return jsonify({"message": f"Đã {status} sản phẩm {product.name}", "follow_flag": product.follow_flag})
 
 
 @main.route("/start-crawl")

@@ -14,6 +14,7 @@ class Product(db.Model):
     imageLink = Column(String(500))
     category = Column(String(255))
     type = Column(String(255))
+    follow_flag = Column(Boolean, default=False, nullable=False)
 
 
 class OrderDetail(db.Model):

@@ -196,10 +196,10 @@
         }
 
         .logo .brand.active {
-            background-color: #e65e3c; /* màu nổi bật */
+            background-color: #e65e3c;
+            /* màu nổi bật */
             color: white;
         }
-
     </style>
     <style>
         html {
@@ -217,7 +217,7 @@
             font-size: 15px;
             text-align: center;
             text-decoration: none;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
             transition: background-color 0.3s, transform 0.2s;
             z-index: 999;
         }
@@ -235,134 +235,198 @@
             padding: 0.5rem
         }
     </style>
+    <style>
+        .follow-btn {
+            padding: 0.4rem 0.8rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+            color: white;
+            background-color: #319dab;
+        }
+
+        .follow-btn:hover {
+            background-color: #247b8a;
+        }
+
+        .unfollow-btn {
+            padding: 0.4rem 0.8rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+            color: white;
+            background-color: #e65e3c;
+        }
+
+        .unfollow-btn:hover {
+            background-color: #e65e3c;
+        }
+
+    </style>
+
 </head>
 
 <body>
 
-<nav class="navbar">
-    <div class="logo">
-        <a href="/gu" class="brand" data-brand="gu">GU</a>
-        <a href="/uniqlo" class="brand" data-brand="uniqlo">Uniqlo</a>
-    </div>
-    <div class="categories">
-        <a href="/{{ brand }}?category=women" data-category="women">Women</a>
-        <a href="/{{ brand }}?category=men" data-category="men">Men</a>
-        <a href="/{{ brand }}?category=kids" data-category="kids">Kids</a>
-        <a href="/{{ brand }}?category=baby" data-category="baby">Baby</a>
-        <a href="/{{ brand }}/sale" data-category="sale">Sale</a>
-        <a href="/start-crawl" style="background-color: #e65e3c;">Quét sản phẩm</a>
-        <a href="/orders" style="background-color: #e65e3c;">Danh sách đơn</a>
-    </div>
-    <form action="/search" method="post">
-        <input type="text" name="searchKey" id="searchKey" placeholder="Tìm kiếm...">
-        <button type="submit">Tìm</button>
-    </form>
-</nav>
+    <nav class="navbar">
+        <div class="logo">
+            <a href="/gu" class="brand" data-brand="gu">GU</a>
+            <a href="/uniqlo" class="brand" data-brand="uniqlo">Uniqlo</a>
+        </div>
+        <div class="categories">
+            <a href="/{{ brand }}?category=women" data-category="women">Women</a>
+            <a href="/{{ brand }}?category=men" data-category="men">Men</a>
+            <a href="/{{ brand }}?category=kids" data-category="kids">Kids</a>
+            <a href="/{{ brand }}?category=baby" data-category="baby">Baby</a>
+            <a href="/{{ brand }}/sale" data-category="sale">Sale</a>
+            <a href="/follow-product" data-category="sale">Đã follow</a>
+            <a href="/start-crawl" style="background-color: #e65e3c;">Quét sản phẩm</a>
+            <a href="/orders" style="background-color: #e65e3c;">Danh sách đơn</a>
+        </div>
+        <form action="/search" method="post">
+            <input type="text" name="searchKey" id="searchKey" placeholder="Tìm kiếm...">
+            <button type="submit">Tìm</button>
+        </form>
+    </nav>
 
-<div class="container">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-    {% for category, message in messages %}
-    <div class="flash-message {{ category }}">
-        {{ message }}
-    </div>
-    {% endfor %}
-    {% endif %}
-    {% endwith %}
-    <h3>Danh sách sản phẩm (Tổng: {{ products|length }})</h3>
-    <table id="productTable">
-        <thead>
-        <tr>
-            <th>STT</th>
-            <th>Ảnh</th>
-            <th>Code</th>
-            <th>Tên sản phẩm</th>
-            <th>Giá Cũ (¥)</th>
-            <th>Giá Mới (¥)</th>
-            <th id="discountHeader" style="cursor: pointer;">Giảm(¥) ⬍</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for p in products %}
-        <tr>
-            <td>{{ loop.index }}</td>
-            <td><img src="{{ p.imageLink }}" alt="{{ p.name }}"></td>
-            <td>{{ p.product_code }}</td>
-            <td>
-                <a href="{{ p.link }}" target="_blank">{{ p.name }}</a>
-                {% if p.discountFlg %}
-                <span class="badge-sale">Sale!</span>
-                {% endif %}
-            </td>
-            <td>¥{{ "{:,}".format(p.old_price) }}</td>
-            <td>¥{{ "{:,}".format(p.current_price) }}</td>
-            <td class="discount">{{ "{:,}".format(p.old_price - p.current_price) }}</td>
-        </tr>
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="flash-message {{ category }}">
+            {{ message }}
+        </div>
         {% endfor %}
-        </tbody>
-    </table>
-</div>
-<!-- Nút lên đầu trang -->
-<a href="#" class="btn-top">↑ Lên đầu trang</a>
+        {% endif %}
+        {% endwith %}
+        <h3>Danh sách sản phẩm (Tổng: {{ products|length }})</h3>
+        <table id="productTable">
+            <thead>
+                <tr>
+                    <th>STT</th>
+                    <th>Ảnh</th>
+                    <th>Code</th>
+                    <th>Tên sản phẩm</th>
+                    <th>Giá Cũ (¥)</th>
+                    <th>Giá Mới (¥)</th>
+                    <th id="discountHeader" style="cursor: pointer;">Giảm(¥) ⬍</th>
+                    <th>follow/unfollow</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in products %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td><img src="{{ p.imageLink }}" alt="{{ p.name }}"></td>
+                    <td>{{ p.product_code }}</td>
+                    <td>
+                        <a href="{{ p.link }}" target="_blank">{{ p.name }}</a>
+                        {% if p.discountFlg %}
+                        <span class="badge-sale">Sale!</span>
+                        {% endif %}
+                    </td>
+                    <td>¥{{ "{:,}".format(p.old_price) }}</td>
+                    <td>¥{{ "{:,}".format(p.current_price) }}</td>
+                    <td class="discount">{{ "{:,}".format(p.old_price - p.current_price) }}</td>
+                    <td>
+                        <button class="{{ 'unfollow-btn' if p.follow_flag else 'follow-btn' }}" data-id="{{ p.id }}"
+                            data-follow="{{ 'true' if p.follow_flag else 'false' }}">
+                            {{ 'Unfollow' if p.follow_flag else 'Follow' }}
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <!-- Nút lên đầu trang -->
+    <a href="#" class="btn-top">↑ Lên đầu trang</a>
 
-<footer>
-    &copy; 2025 Uniqlo Products. All rights reserved.
-</footer>
+    <footer>
+        &copy; 2025 Uniqlo Products. All rights reserved.
+    </footer>
 
-<script>
-    // Active category dựa trên URL
-    const categoryLinks = document.querySelectorAll('.categories a');
-    const urlParams = new URLSearchParams(window.location.search);
-    const currentCategory = urlParams.get('category') || (window.location.pathname.includes('sale') ? 'sale' : null);
+    <script>
+        // Active category dựa trên URL
+        const categoryLinks = document.querySelectorAll('.categories a');
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentCategory = urlParams.get('category') || (window.location.pathname.includes('sale') ? 'sale' : null);
 
-    categoryLinks.forEach(link => {
-        link.classList.remove('active');
-        if (link.dataset.category === currentCategory) {
-            link.classList.add('active');
-        }
-    });
+        categoryLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.dataset.category === currentCategory) {
+                link.classList.add('active');
+            }
+        });
 
-</script>
-<script>
-    const discountHeader = document.getElementById("discountHeader");
-    const table = document.getElementById("productTable");
-    const tbody = table.querySelector("tbody");
-    let sorted = false;
-    let originalRows = Array.from(tbody.rows); // Lưu thứ tự gốc
+    </script>
+    <script>
+        const discountHeader = document.getElementById("discountHeader");
+        const table = document.getElementById("productTable");
+        const tbody = table.querySelector("tbody");
+        let sorted = false;
+        let originalRows = Array.from(tbody.rows); // Lưu thứ tự gốc
 
-    discountHeader.addEventListener("click", () => {
-        if (!sorted) {
-            // Sort giảm dần
-            let rows = Array.from(tbody.rows);
-            rows.sort((a, b) => {
-                let discountA = parseInt(a.querySelector(".discount").textContent.replace(/,/g, ""));
-                let discountB = parseInt(b.querySelector(".discount").textContent.replace(/,/g, ""));
-                return discountB - discountA;
+        discountHeader.addEventListener("click", () => {
+            if (!sorted) {
+                // Sort giảm dần
+                let rows = Array.from(tbody.rows);
+                rows.sort((a, b) => {
+                    let discountA = parseInt(a.querySelector(".discount").textContent.replace(/,/g, ""));
+                    let discountB = parseInt(b.querySelector(".discount").textContent.replace(/,/g, ""));
+                    return discountB - discountA;
+                });
+                rows.forEach(row => tbody.appendChild(row));
+                sorted = true;
+                discountHeader.textContent = "Giảm (¥) ▼";
+            } else {
+                // Trở lại như ban đầu
+                originalRows.forEach(row => tbody.appendChild(row));
+                sorted = false;
+                discountHeader.textContent = "Giảm (¥) ⬍";
+            }
+        });
+    </script>
+    <script>
+        const brandLinks = document.querySelectorAll(".logo .brand");
+        const path = window.location.pathname;
+
+        brandLinks.forEach(link => {
+            link.classList.remove("active");
+            if (path.startsWith("/gu") && link.dataset.brand === "gu") {
+                link.classList.add("active");
+            } else if (path.startsWith("/uniqlo") && link.dataset.brand === "uniqlo") {
+                link.classList.add("active");
+            }
+        });
+    </script>
+    <script>
+        document.querySelectorAll(".follow-btn, .unfollow-btn").forEach(btn => {
+            btn.addEventListener("click", async () => {
+                const productId = btn.dataset.id;
+                const isFollow = btn.dataset.follow === "true";
+
+                const response = await fetch("/toggle-follow", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ product_id: productId })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    // Cập nhật lại trạng thái nút
+                    btn.dataset.follow = data.follow_flag ? "true" : "false";
+                    btn.textContent = data.follow_flag ? "Unfollow" : "Follow";
+                    btn.style.backgroundColor = data.follow_flag ? "#e65e3c" : "#319dab";
+                    btn.style.color = "#fff";
+                } else {
+                    alert(data.message || "Lỗi khi cập nhật");
+                }
             });
-            rows.forEach(row => tbody.appendChild(row));
-            sorted = true;
-            discountHeader.textContent = "Giảm (¥) ▼";
-        } else {
-            // Trở lại như ban đầu
-            originalRows.forEach(row => tbody.appendChild(row));
-            sorted = false;
-            discountHeader.textContent = "Giảm (¥) ⬍";
-        }
-    });
-</script>
-<script>
-    const brandLinks = document.querySelectorAll(".logo .brand");
-    const path = window.location.pathname;
-
-    brandLinks.forEach(link => {
-        link.classList.remove("active");
-        if (path.startsWith("/gu") && link.dataset.brand === "gu") {
-            link.classList.add("active");
-        } else if (path.startsWith("/uniqlo") && link.dataset.brand === "uniqlo") {
-            link.classList.add("active");
-        }
-    });
-</script>
+        });
+    </script>
 </body>
 
 </html>
