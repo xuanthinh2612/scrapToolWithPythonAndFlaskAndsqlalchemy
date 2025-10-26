@@ -89,7 +89,7 @@ def get_order_detail():
     from app.models import OrderDetail
 
     # Tìm tất cả email của Uniqlo có chữ "ご注文を受付けました" (đặt hàng thành công)
-    uniqlo_emails = search_emails('from:(noreply-order@ml.store.uniqlo.com) "ご注文を受付けました" newer_than:10d')
+    uniqlo_emails = search_emails('from:(noreply-order@ml.store.uniqlo.com) "ご注文を受付けました" newer_than:20d')
     # return uniqlo_emails
     for e in uniqlo_emails:
         send_date = parsedate_to_datetime(e['date']).replace(tzinfo=None).strftime("%Y-%m-%d %H:%M:%S")
@@ -128,13 +128,13 @@ def update_order_detail():
 
     # Tìm tất cả email của Uniqlo có chữ "ご注文商品の出荷準備が完了しました" (đặt hàng thành công)
     ready_to_delivery_emails = search_emails(
-        'from:(noreply-order@ml.store.uniqlo.com) "ご注文商品の出荷準備が完了しました" newer_than:10d')
+        'from:(noreply-order@ml.store.uniqlo.com) "ご注文商品の出荷準備が完了しました" newer_than:20d')
     ready_to_take_out_emails = search_emails(
-        'from:(noreply-order@ml.store.uniqlo.com) "ご注文商品準備完了のお知らせ" newer_than:10d')
+        'from:(noreply-order@ml.store.uniqlo.com) "ご注文商品準備完了のお知らせ" newer_than:20d')
     delivered_emails = search_emails(
-        'from:(mail@kuronekoyamato.co.jp) "お荷物お届け完了のお知らせ" newer_than:10d')
+        'from:(mail@kuronekoyamato.co.jp) "お荷物お届け完了のお知らせ" newer_than:20d')
     canceled_emails = search_emails(
-        'from:(noreply-order@ml.store.uniqlo.com) "ご注文をキャンセルしました" newer_than:10d')
+        'from:(noreply-order@ml.store.uniqlo.com) "ご注文をキャンセルしました" newer_than:20d')
 
     for e in ready_to_delivery_emails:
         update_date = parsedate_to_datetime(e['date']).replace(tzinfo=None).strftime("%Y-%m-%d %H:%M:%S")

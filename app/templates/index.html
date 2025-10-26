@@ -312,7 +312,7 @@
                     <th>Giá Cũ (¥)</th>
                     <th>Giá Mới (¥)</th>
                     <th id="discountHeader" style="cursor: pointer;">Giảm(¥) ⬍</th>
-                    <th>follow/unfollow</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -335,6 +335,8 @@
                             data-follow="{{ 'true' if p.follow_flag else 'false' }}">
                             {{ 'Unfollow' if p.follow_flag else 'Follow' }}
                         </button>
+                        <button class="order-btn" data-id="{{ p.id }}">Cập nhật</button>
+                        <button class="order-btn" data-id="{{ p.id }}">Đặt hàng</button>
                     </td>
                 </tr>
                 {% endfor %}
@@ -347,6 +349,38 @@
     <footer>
         &copy; 2025 Uniqlo Products. All rights reserved.
     </footer>
+
+<!--    modal-->
+
+    <!-- Modal hiển thị thông tin sản phẩm -->
+    <div id="orderModal" class="modal" style="
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0; top: 0;
+        width: 100%; height: 100%;
+        background-color: rgba(0,0,0,0.4);
+        justify-content: center;
+        align-items: center;">
+      <div class="modal-content" style="
+          background-color: white;
+          padding: 1.5rem;
+          border-radius: 10px;
+          width: 90%;
+          max-width: 600px;
+          max-height: 90%;
+          overflow-y: auto;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      ">
+        <h2 id="modalTitle" style="margin-top: 0;">Thông tin sản phẩm</h2>
+        <div id="modalBody">
+          <p>Đang tải...</p>
+        </div>
+        <div style="text-align: right; margin-top: 1rem;">
+          <button id="closeModal" style="padding: 0.5rem 1rem; background-color: #319dab; color: white; border: none; border-radius: 5px;">Đóng</button>
+        </div>
+      </div>
+    </div>
 
     <script>
         // Active category dựa trên URL
@@ -402,6 +436,9 @@
             }
         });
     </script>
+
+    <!--Cập nhật thông tin color, size sản phẩm-->
+
     <script>
         document.querySelectorAll(".follow-btn, .unfollow-btn").forEach(btn => {
             btn.addEventListener("click", async () => {
@@ -427,6 +464,83 @@
             });
         });
     </script>
+    <script>
+        document.querySelectorAll(".order-btn").forEach(btn => {
+            btn.addEventListener("click", async () => {
+                const productId = btn.dataset.id;
+                btn.disabled = true;
+                btn.textContent = "Đang tải...";
+
+                const response = await fetch("/order-product", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ product_id: productId })
+                });
+
+                const data = await response.json();
+                btn.disabled = false;
+                btn.textContent = "Đặt hàng";
+
+                if (!response.ok) {
+                    alert(data.message || "Lỗi khi lấy dữ liệu sản phẩm!");
+                    return;
+                }
+
+                // 🧩 Hiển thị modal với dữ liệu sản phẩm
+                showOrderModal(data);
+            });
+        });
+
+        function showOrderModal(data) {
+            const modal = document.getElementById("orderModal");
+            const body = document.getElementById("modalBody");
+            const title = document.getElementById("modalTitle");
+
+            title.textContent = data.message || "Thông tin sản phẩm";
+            body.innerHTML = "";
+
+            if (!data.colors || data.colors.length === 0) {
+                body.innerHTML = "<p>Không có dữ liệu màu nào.</p>";
+            } else {
+                data.colors.forEach(color => {
+                    const colorDiv = document.createElement("div");
+                    colorDiv.style.marginBottom = "1rem";
+                    colorDiv.style.borderBottom = "1px solid #eee";
+                    colorDiv.style.paddingBottom = "0.5rem";
+
+                    colorDiv.innerHTML = `
+                        <div style="display:flex; align-items:center; gap:1rem;">
+                            <img src="${color.imageLink}" alt="${color.color_name}" style="width:50px; height:50px; border-radius:4px; border:1px solid #ccc;">
+                            <div>
+                                <strong>${color.color_name}</strong><br>
+                                <small>Mã: ${color.color_code || "(chưa có)"}</small>
+                            </div>
+                        </div>
+                    `;
+                    body.appendChild(colorDiv);
+<!--                    if (color.sizes) {-->
+<!--                      const sizeList = color.sizes.map(s => -->
+<!--                        `<span style="padding:4px 8px; border:1px solid #ccc; border-radius:4px; margin-right:4px; background:${s.available ? '#d4edda' : '#f8d7da'};">${s.name}</span>`-->
+<!--                      ).join("");-->
+<!--                      colorDiv.innerHTML += `<div style="margin-top:6px;">${sizeList}</div>`;-->
+<!--                    }-->
+                });
+            }
+
+            modal.style.display = "flex";
+        }
+
+        document.getElementById("closeModal").addEventListener("click", () => {
+            document.getElementById("orderModal").style.display = "none";
+        });
+
+        // Đóng modal khi click ra ngoài
+        window.addEventListener("click", e => {
+            const modal = document.getElementById("orderModal");
+            if (e.target === modal) modal.style.display = "none";
+        });
+    </script>
+
 </body>
 
 </html>

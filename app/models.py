@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
+from sqlalchemy.orm import relationship
 
 from app import db
 
@@ -15,6 +16,27 @@ class Product(db.Model):
     category = Column(String(255))
     type = Column(String(255))
     follow_flag = Column(Boolean, default=False, nullable=False)
+
+    colors = relationship("ProductColor", back_populates="product", cascade="all, delete-orphan")
+
+
+class ProductColor(db.Model):
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    product_id = Column(Integer, ForeignKey("product.id"), nullable=False)
+    color_name = Column(String(255))
+    color_code = Column(String(255))
+    sizes = relationship("ProductSize", back_populates="color", cascade="all, delete-orphan")
+    imageLink = Column(String(500))  # ✅ để lưu link ảnh chip
+
+    product = relationship("Product", back_populates="colors")
+
+
+class ProductSize(db.Model):
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    color_id = Column(Integer, ForeignKey("product_color.id"), nullable=False)
+    size_name = Column(String(255))
+
+    color = relationship("ProductColor", back_populates="sizes")
 
 
 class OrderDetail(db.Model):

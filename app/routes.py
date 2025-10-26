@@ -5,7 +5,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, jsonif
 from sqlalchemy import desc, or_, asc, and_
 
 from scraper import google_mail_service
-from app.models import Product, OrderDetail
+from app.models import Product, OrderDetail, ProductColor
 from scraper import uniqlo_crawl
 from app.const import *
 
@@ -271,3 +271,98 @@ def update_all_email_data():
         return redirect(url_for("main.order_index"))
     except Exception as e:
         return f"Lỗi: {str(e)}"
+
+
+@main.route("/order-product", methods=["POST"])
+def order_product():
+    """
+    Khi người dùng nhấn nút 'Đặt hàng':
+    - Nhận product_id từ client
+    - Mở trang product.link bằng Selenium (headless)
+    - Lấy danh sách màu + ảnh chip
+    - Cập nhật lại vào DB
+    """
+    from app import db
+    from selenium import webdriver
+    from selenium.webdriver.chrome.options import Options
+    from selenium.webdriver.common.by import By
+    import time
+
+    data = request.get_json()
+    product_id = data.get("product_id")
+
+    if not product_id:
+        return jsonify({"message": "Thiếu ID sản phẩm"}), 400
+
+    # --- Lấy sản phẩm từ DB ---
+    product = Product.query.get(product_id)
+    if not product:
+        return jsonify({"message": "Không tìm thấy sản phẩm"}), 404
+
+    # --- Cấu hình Selenium ---
+    chrome_options = Options()
+    chrome_options.add_argument("--headless=new")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--window-size=1920,1080")
+
+    driver = webdriver.Chrome(options=chrome_options)
+
+    try:
+        driver.get(product.link)
+        time.sleep(3)  # chờ trang SPA render
+
+        # 🎨 Lấy danh sách màu
+        colors = []
+
+        # 🎯 Tìm <ul> chứa danh sách màu
+        ul_selector = "ul.content-alignment.collection-list-horizontal"
+        ul_element = driver.find_element(By.CSS_SELECTOR, ul_selector)
+
+        # 🎨 Lặp qua từng <li> (mỗi màu)
+        li_elements = ul_element.find_elements(By.CSS_SELECTOR, "li.collection-list-horizontal__item")
+
+        colors = []
+        for li in li_elements:
+            try:
+                button = li.find_element(By.CSS_SELECTOR, "button.chip")
+                color_code = button.get_attribute("value") or ""
+                img = button.find_element(By.TAG_NAME, "img")
+                color_name = img.get_attribute("alt") or ""
+                image_link = img.get_attribute("src") or ""
+
+                colors.append({
+                    "color_code": color_code.strip(),
+                    "color_name": color_name.strip(),
+                    "imageLink": image_link.strip()
+                })
+            except Exception as e:
+                print(f"Lỗi khi lấy màu: {e}")
+
+        # # --- Cập nhật DB ---
+        # # Xóa danh sách màu cũ (nếu có cascade delete-orphan)
+        product.colors.clear()
+
+        for color_data in colors:
+            color_obj = ProductColor(
+                color_name=color_data["color_name"],
+                imageLink=color_data["imageLink"],
+                color_code=color_data["color_code"],
+                product=product,
+            )
+
+            db.session.add(color_obj)
+
+        db.session.commit()
+
+        return jsonify({
+            "message": f"Đã cập nhật {len(colors)} màu cho sản phẩm {product.name}",
+            "colors": colors
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"message": f"Lỗi khi xử lý Selenium: {str(e)}"}), 500
+
+    finally:
+        driver.quit()
