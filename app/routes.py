@@ -5,7 +5,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, jsonif
 from sqlalchemy import desc, or_, asc, and_
 
 from scraper import google_mail_service
-from app.models import Product, OrderDetail, ProductColor
+from app.models import Product, OrderDetail, ProductColor, ProductSize
 from scraper import uniqlo_crawl
 from app.const import *
 
@@ -321,7 +321,7 @@ def order_product():
         li_elements = ul_element.find_elements(By.CSS_SELECTOR, "li.collection-list-horizontal__item")
 
         colors = []
-        sizes = []
+        sizes = {}
 
         for li in li_elements:
             try:
@@ -342,31 +342,29 @@ def order_product():
                 size_group_selector = "div.size-chip-group"
                 size_group_element = driver.find_element(By.CSS_SELECTOR, size_group_selector)
                 size_elements = size_group_element.find_elements(By.CSS_SELECTOR, "div.size-chip-wrapper")
+                size_by_color = []
                 for size in size_elements:
                     # size_name = size.find_element(By.CSS_SELECTOR, "button.chip div[data-testid='ITOContentAlignment'] div.typography").text
                     size_name = size.find_element(By.CSS_SELECTOR, "div[data-testid='ITOTypography']").text
                     size_over_flg = size.find_elements(By.CSS_SELECTOR, "div.strike")
                     
                     if not size_over_flg:
-                        sizes.append({
-                            "color_name": color_name.strip(),
+                        size_by_color.append({
                             "size_name": size_name.strip(),
-                        })
-                        print(size_name)
+                        })                        
+                
+                sizes[color_name.strip()] = size_by_color
 
             except Exception as e:
                 print(f"Lỗi khi lấy màu: {e}")
             
-
-
-
         # # --- Cập nhật DB ---
         # # Xóa danh sách màu cũ (nếu có cascade delete-orphan)
-        product.colors.clear()
-
         # UDPATE Product info
+        product.colors.clear()
         product.current_price = product_price
 
+        # Cập nhật màu có thể đặt hàng
         for color_data in colors:
             color_obj = ProductColor(
                 color_name=color_data["color_name"],
@@ -375,7 +373,13 @@ def order_product():
                 product=product,
             )
             
-
+            size_list = sizes.get(color_data["color_name"], [])
+            for size_data  in size_list:
+                size_obj = ProductSize(
+                    color = color_obj,
+                    size_name = size_data ["size_name"]
+                )
+                db.session.add(size_obj)
 
             db.session.add(color_obj)
 
@@ -394,7 +398,7 @@ def order_product():
         driver.quit()
 
 
-@main.route("/get-product-color-and-size", methods=["GET"])
+@main.route("/get-product-color-and-size", methods=["POST"])
 def get_product_color_and_size():
     from app import db
 
@@ -415,14 +419,32 @@ def get_product_color_and_size():
     if not product:
         return jsonify({"message": "Không tìm thấy sản phẩm"}), 404
 
-    try:
+    # Tạo danh sách màu sắc và kích thước
+    colors = []
+    for color in product.colors:
+        size_data = []
+        for size in color.sizes:
+            size_data.append({
+                "size_name": size.size_name,
+            })
 
+        colors.append({
+            "color_name": color.color_name,
+            "color_code": color.color_code,
+            "imageLink": color.imageLink,
+            "sizes": size_data  # Thêm danh sách kích thước vào mỗi màu
+        })
+
+    try:
         return jsonify({
-            "message": f"Đã cập nhật {len(colors)} màu cho sản phẩm {product.name}",
-            "colors": colors
+            "message": f"Thông tin sản phẩm {product.name}",
+            "product": {
+                "name": product.name,
+                "imageLink": product.imageLink,
+                "colors": colors
+            }
         })
 
     except Exception as e:
         db.session.rollback()
-        return jsonify({"message": f"Lỗi khi xử lý Selenium: {str(e)}"}), 500
-
+        return jsonify({"message": f"Lỗi khi xử lý: {str(e)}"}), 500
