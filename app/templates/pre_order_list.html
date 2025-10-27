@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Danh sách Pre-Order</title>
+    <style>
+        /* Reset cơ bản */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+            background-color: #f9f9fb;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Navbar */
+        nav {
+            background-color: #319dab;
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        nav h1 {
+            font-size: 1.4rem;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            background-color: #e65e3c;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            transition: 0.3s;
+        }
+
+        nav a:hover {
+            background-color: #c94b2e;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            background: white;
+            padding: 1.5rem 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        h2 {
+            margin-bottom: 1rem;
+            color: #247b8a;
+        }
+
+        /* Table */
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+
+        th, td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #319dab;
+            color: white;
+            position: sticky;
+            top: 0;
+        }
+
+        tr:hover {
+            background-color: #f1f8fa;
+        }
+
+        td:nth-child(1) {
+            font-weight: bold;
+            color: #319dab;
+        }
+
+        .export-btn {
+            display: inline-block;
+            margin-top: 1rem;
+            background-color: #319dab;
+            color: white;
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .export-btn:hover {
+            background-color: #247b8a;
+        }
+
+        footer {
+            margin-top: auto;
+            background: #fff;
+            text-align: center;
+            padding: 1rem;
+            color: #777;
+            font-size: 0.9rem;
+            border-top: 1px solid #eee;
+        }
+
+        @media (max-width: 768px) {
+            th, td {
+                padding: 0.5rem;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <h1>Pre-Order Management</h1>
+        <a href="/uniqlo">← Quay lại sản phẩm</a>
+    </nav>
+
+    <div class="container">
+        <h2>Danh sách Pre-Order (Tổng: {{ pre_order_list|length }})</h2>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Mã SP</th>
+                        <th>Màu</th>
+                        <th>Kích cỡ</th>
+                        <th>Số lượng</th>
+                        <th>Giá (¥)</th>
+                        <th>Link</th>
+                        <th>Đã xuất?</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in pre_order_list %}
+                    <tr>
+                        <td>{{ item.id }}</td>
+                        <td>{{ item.product_code }}</td>
+                        <td>{{ item.color }}</td>
+                        <td>{{ item.size }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>¥{{ "{:,}".format(item.price or 0) }}</td>
+                        <td><a href="{{ item.link }}" target="_blank">Xem</a></td>
+                        <td>
+                            {% if item.export_flag %}
+                                ✅
+                            {% else %}
+                                ❌
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <form id="exportForm" action="/export-pre-order-data" method="POST">
+            <button type="submit" class="export-btn">⬇️ Export CSV</button>
+        </form>
+    </div>
+
+    <footer>
+        &copy; 2025 Pre-Order System. All rights reserved.
+    </footer>
+
+</body>
+</html>

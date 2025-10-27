@@ -270,90 +270,91 @@
 
 <body>
 
-    <nav class="navbar">
-        <div class="logo">
-            <a href="/gu" class="brand" data-brand="gu">GU</a>
-            <a href="/uniqlo" class="brand" data-brand="uniqlo">Uniqlo</a>
-        </div>
-        <div class="categories">
-            <a href="/{{ brand }}?category=women" data-category="women">Women</a>
-            <a href="/{{ brand }}?category=men" data-category="men">Men</a>
-            <a href="/{{ brand }}?category=kids" data-category="kids">Kids</a>
-            <a href="/{{ brand }}?category=baby" data-category="baby">Baby</a>
-            <a href="/{{ brand }}/sale" data-category="sale">Sale</a>
-            <a href="/follow-product" data-category="sale">Đã follow</a>
-            <a href="/start-crawl" style="background-color: #e65e3c;">Quét sản phẩm</a>
-            <a href="/orders" style="background-color: #e65e3c;">Danh sách đơn</a>
-        </div>
-        <form action="/search" method="post">
-            <input type="text" name="searchKey" id="searchKey" placeholder="Tìm kiếm...">
-            <button type="submit">Tìm</button>
-        </form>
-    </nav>
-
-    <div class="container">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-        {% for category, message in messages %}
-        <div class="flash-message {{ category }}">
-            {{ message }}
-        </div>
-        {% endfor %}
-        {% endif %}
-        {% endwith %}
-        <h3>Danh sách sản phẩm (Tổng: {{ products|length }})</h3>
-        <table id="productTable">
-            <thead>
-                <tr>
-                    <th>STT</th>
-                    <th>Ảnh</th>
-                    <th>Code</th>
-                    <th>Tên sản phẩm</th>
-                    <th>Giá Cũ (¥)</th>
-                    <th>Giá Mới (¥)</th>
-                    <th id="discountHeader" style="cursor: pointer;">Giảm(¥) ⬍</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for p in products %}
-                <tr>
-                    <td>{{ loop.index }}</td>
-                    <td><img src="{{ p.imageLink }}" alt="{{ p.name }}"></td>
-                    <td>{{ p.product_code }}</td>
-                    <td>
-                        <a href="{{ p.link }}" target="_blank">{{ p.name }}</a>
-                        {% if p.discountFlg %}
-                        <span class="badge-sale">Sale!</span>
-                        {% endif %}
-                    </td>
-                    <td>¥{{ "{:,}".format(p.old_price) }}</td>
-                    <td>¥{{ "{:,}".format(p.current_price) }}</td>
-                    <td class="discount">{{ "{:,}".format(p.old_price - p.current_price) }}</td>
-                    <td>
-                        <button class="{{ 'unfollow-btn' if p.follow_flag else 'follow-btn' }}" data-id="{{ p.id }}"
-                            data-follow="{{ 'true' if p.follow_flag else 'false' }}">
-                            {{ 'Unfollow' if p.follow_flag else 'Follow' }}
-                        </button>
-                        <button class="update-btn" data-id="{{ p.id }}">Cập nhật</button>
-                        <button class="order-btn" data-id="{{ p.id }}">Đặt hàng</button>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+<nav class="navbar">
+    <div class="logo">
+        <a href="/gu" class="brand" data-brand="gu">GU</a>
+        <a href="/uniqlo" class="brand" data-brand="uniqlo">Uniqlo</a>
     </div>
-    <!-- Nút lên đầu trang -->
-    <a href="#" class="btn-top">↑ Lên đầu trang</a>
+    <div class="categories">
+        <a href="/{{ brand }}?category=women" data-category="women">Women</a>
+        <a href="/{{ brand }}?category=men" data-category="men">Men</a>
+        <a href="/{{ brand }}?category=kids" data-category="kids">Kids</a>
+        <a href="/{{ brand }}?category=baby" data-category="baby">Baby</a>
+        <a href="/{{ brand }}/sale" data-category="sale">Sale</a>
+        <a href="/follow-product" data-category="sale">Đã follow</a>
+        <a href="/start-crawl" style="background-color: #e65e3c;">Quét sản phẩm</a>
+        <a href="/orders" style="background-color: #e65e3c;">Danh sách đơn</a>
+        <a href="/pre-order-info" style="background-color: #e65e3c;">Xuất đơn hàng</a>
+    </div>
+    <form action="/search" method="post">
+        <input type="text" name="searchKey" id="searchKey" placeholder="Tìm kiếm...">
+        <button type="submit">Tìm</button>
+    </form>
+</nav>
 
-    <footer>
-        &copy; 2025 Uniqlo Products. All rights reserved.
-    </footer>
+<div class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="flash-message {{ category }}">
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+    <h3>Danh sách sản phẩm (Tổng: {{ products|length }})</h3>
+    <table id="productTable">
+        <thead>
+        <tr>
+            <th>STT</th>
+            <th>Ảnh</th>
+            <th>Code</th>
+            <th>Tên sản phẩm</th>
+            <th>Giá Cũ (¥)</th>
+            <th>Giá Mới (¥)</th>
+            <th id="discountHeader" style="cursor: pointer;">Giảm(¥) ⬍</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for p in products %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td><img src="{{ p.imageLink }}" alt="{{ p.name }}"></td>
+            <td>{{ p.product_code }}</td>
+            <td>
+                <a href="{{ p.link }}" target="_blank">{{ p.name }}</a>
+                {% if p.discountFlg %}
+                <span class="badge-sale">Sale!</span>
+                {% endif %}
+            </td>
+            <td>¥{{ "{:,}".format(p.old_price) }}</td>
+            <td>¥{{ "{:,}".format(p.current_price) }}</td>
+            <td class="discount">{{ "{:,}".format(p.old_price - p.current_price) }}</td>
+            <td>
+                <button class="{{ 'unfollow-btn' if p.follow_flag else 'follow-btn' }}" data-id="{{ p.id }}"
+                        data-follow="{{ 'true' if p.follow_flag else 'false' }}">
+                    {{ 'Unfollow' if p.follow_flag else 'Follow' }}
+                </button>
+                <button class="update-btn" data-id="{{ p.id }}">Cập nhật</button>
+                <button class="order-btn" data-id="{{ p.id }}">Đặt hàng</button>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<!-- Nút lên đầu trang -->
+<a href="#" class="btn-top">↑ Lên đầu trang</a>
+
+<footer>
+    &copy; 2025 Uniqlo Products. All rights reserved.
+</footer>
 
 <!--    modal-->
 
-    <!-- Modal hiển thị thông tin sản phẩm -->
-    <div id="orderModal" class="modal" style="
+<!-- Modal hiển thị thông tin sản phẩm -->
+<div id="updateModal" class="modal" style="
         display: none;
         position: fixed;
         z-index: 1000;
@@ -362,7 +363,7 @@
         background-color: rgba(0,0,0,0.4);
         justify-content: center;
         align-items: center;">
-      <div class="modal-content" style="
+    <div class="modal-content" style="
           background-color: white;
           padding: 1.5rem;
           border-radius: 10px;
@@ -372,305 +373,320 @@
           overflow-y: auto;
           box-shadow: 0 4px 10px rgba(0,0,0,0.2);
       ">
-        <h2 id="modalTitle" style="margin-top: 0;">Thông tin sản phẩm</h2>
-        <div id="modalBody">
-          <p>Đang tải...</p>
+        <h2 id="updateModalTitle" style="margin-top: 0;">Thông tin sản phẩm</h2>
+        <div id="updateModalBody">
+            <p>Đang tải...</p>
         </div>
         <div style="text-align: right; margin-top: 1rem;">
-          <button id="closeModal" style="padding: 0.5rem 1rem; background-color: #319dab; color: white; border: none; border-radius: 5px;">Đóng</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Modal hiển thị thông tin sản phẩm -->
-    <div id="orderModal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); justify-content: center; align-items: center;">
-        <div class="modal-content" style="background-color: white; padding: 1.5rem; border-radius: 10px; width: 90%; max-width: 600px; max-height: 90%; overflow-y: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
-            <h2 id="modalTitle" style="margin-top: 0;">Thông tin sản phẩm</h2>
-            <div id="modalBody"></div>
-            <div style="text-align: right; margin-top: 1rem;">
-                <button id="closeModal" style="padding: 0.5rem 1rem; background-color: #319dab; color: white; border: none; border-radius: 5px;">Đóng</button>
-            </div>
+            <button id="closeUpdateModal"
+                    style="padding: 0.5rem 1rem; background-color: #319dab; color: white; border: none; border-radius: 5px;">
+                Đóng
+            </button>
         </div>
     </div>
+</div>
 
-    <script>
-        // Active category dựa trên URL
-        const categoryLinks = document.querySelectorAll('.categories a');
-        const urlParams = new URLSearchParams(window.location.search);
-        const currentCategory = urlParams.get('category') || (window.location.pathname.includes('sale') ? 'sale' : null);
+<!-- Modal hiển thị thông tin sản phẩm -->
+<div id="orderModal" class="modal"
+     style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); justify-content: center; align-items: center;">
+    <div class="modal-content"
+         style="background-color: white; padding: 1.5rem; border-radius: 10px; width: 90%; max-width: 600px; max-height: 90%; overflow-y: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
+        <h2 id="modalTitle" style="margin-top: 0;">Thông tin sản phẩm</h2>
+        <div id="modalBody"></div>
+        <div style="text-align: right; margin-top: 1rem;">
+            <button id="submitOrder"
+                    style="padding: 0.5rem 1rem; background-color: #319dab; color: white; border: none; border-radius: 5px;">
+                Lưu
+            </button>
+            <button id="closeModal"
+                    style="padding: 0.5rem 1rem; background-color: #319dab; color: white; border: none; border-radius: 5px;">
+                Đóng
+            </button>
+        </div>
+    </div>
+</div>
 
-        categoryLinks.forEach(link => {
-            link.classList.remove('active');
-            if (link.dataset.category === currentCategory) {
-                link.classList.add('active');
-            }
-        });
+<script>
+    // Active category dựa trên URL
+    const categoryLinks = document.querySelectorAll('.categories a');
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentCategory = urlParams.get('category') || (window.location.pathname.includes('sale') ? 'sale' : null);
 
-    </script>
-    <script>
-        const discountHeader = document.getElementById("discountHeader");
-        const table = document.getElementById("productTable");
-        const tbody = table.querySelector("tbody");
-        let sorted = false;
-        let originalRows = Array.from(tbody.rows); // Lưu thứ tự gốc
-
-        discountHeader.addEventListener("click", () => {
-            if (!sorted) {
-                // Sort giảm dần
-                let rows = Array.from(tbody.rows);
-                rows.sort((a, b) => {
-                    let discountA = parseInt(a.querySelector(".discount").textContent.replace(/,/g, ""));
-                    let discountB = parseInt(b.querySelector(".discount").textContent.replace(/,/g, ""));
-                    return discountB - discountA;
-                });
-                rows.forEach(row => tbody.appendChild(row));
-                sorted = true;
-                discountHeader.textContent = "Giảm (¥) ▼";
-            } else {
-                // Trở lại như ban đầu
-                originalRows.forEach(row => tbody.appendChild(row));
-                sorted = false;
-                discountHeader.textContent = "Giảm (¥) ⬍";
-            }
-        });
-    </script>
-    <script>
-        const brandLinks = document.querySelectorAll(".logo .brand");
-        const path = window.location.pathname;
-
-        brandLinks.forEach(link => {
-            link.classList.remove("active");
-            if (path.startsWith("/gu") && link.dataset.brand === "gu") {
-                link.classList.add("active");
-            } else if (path.startsWith("/uniqlo") && link.dataset.brand === "uniqlo") {
-                link.classList.add("active");
-            }
-        });
-    </script>
-
-    <!--Cập nhật thông tin color, size sản phẩm-->
-
-    <script>
-        document.querySelectorAll(".follow-btn, .unfollow-btn").forEach(btn => {
-            btn.addEventListener("click", async () => {
-                const productId = btn.dataset.id;
-                const isFollow = btn.dataset.follow === "true";
-
-                const response = await fetch("/toggle-follow", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ product_id: productId })
-                });
-
-                const data = await response.json();
-                if (response.ok) {
-                    // Cập nhật lại trạng thái nút
-                    btn.dataset.follow = data.follow_flag ? "true" : "false";
-                    btn.textContent = data.follow_flag ? "Unfollow" : "Follow";
-                    btn.style.backgroundColor = data.follow_flag ? "#e65e3c" : "#319dab";
-                    btn.style.color = "#fff";
-                } else {
-                    alert(data.message || "Lỗi khi cập nhật");
-                }
-            });
-        });
-    </script>
-    <script>
-        // update thông tin mới nhất cho sản phẩm
-        document.querySelectorAll(".update-btn").forEach(btn => {
-            btn.addEventListener("click", async () => {
-                const productId = btn.dataset.id;
-                btn.disabled = true;
-                btn.textContent = "Đang tải...";
-
-                const response = await fetch("/order-product", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ product_id: productId })
-                });
-
-                const data = await response.json();
-                btn.disabled = false;
-                btn.textContent = "Đặt hàng";
-
-                if (!response.ok) {
-                    alert(data.message || "Lỗi khi lấy dữ liệu sản phẩm!");
-                    return;
-                }
-
-                // 🧩 Hiển thị modal với dữ liệu sản phẩm
-                showOrderModal(data);
-            });
-        });
-
-        function showOrderModal(data) {
-            const modal = document.getElementById("orderModal");
-            const body = document.getElementById("modalBody");
-            const title = document.getElementById("modalTitle");
-
-            title.textContent = data.message || "Thông tin sản phẩm";
-            body.innerHTML = "";
-
-            if (!data.colors || data.colors.length === 0) {
-                body.innerHTML = "<p>Không có dữ liệu màu nào.</p>";
-            } else {
-                data.colors.forEach(color => {
-                    const colorDiv = document.createElement("div");
-                    colorDiv.style.marginBottom = "1rem";
-                    colorDiv.style.borderBottom = "1px solid #eee";
-                    colorDiv.style.paddingBottom = "0.5rem";
-
-                    colorDiv.innerHTML = `
-                        <div style="display:flex; align-items:center; gap:1rem;">
-                            <img src="${color.imageLink}" alt="${color.color_name}" style="width:50px; height:50px; border-radius:4px; border:1px solid #ccc;">
-                            <div>
-                                <strong>${color.color_name}</strong><br>
-                                <small>Mã: ${color.color_code || "(chưa có)"}</small>
-                            </div>
-                        </div>
-                    `;
-                    body.appendChild(colorDiv);
-                });
-            }
-
-            modal.style.display = "flex";
+    categoryLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.dataset.category === currentCategory) {
+            link.classList.add('active');
         }
+    });
 
-        document.getElementById("closeModal").addEventListener("click", () => {
-            document.getElementById("orderModal").style.display = "none";
-        });
+</script>
+<script>
+    const discountHeader = document.getElementById("discountHeader");
+    const table = document.getElementById("productTable");
+    const tbody = table.querySelector("tbody");
+    let sorted = false;
+    let originalRows = Array.from(tbody.rows); // Lưu thứ tự gốc
 
-        // Đóng modal khi click ra ngoài
-        window.addEventListener("click", e => {
-            const modal = document.getElementById("orderModal");
-            if (e.target === modal) modal.style.display = "none";
-        });
-    </script>
-
-    <script>
-        // Bắt đầu hiển thị modal sản phẩm và size, 
-        document.querySelectorAll(".order-btn").forEach(btn => {
-            btn.addEventListener("click", async () => {
-                const productId = btn.dataset.id;
-                btn.disabled = true;
-                btn.textContent = "Đang tải...";
-
-                const response = await fetch("/get-product-color-and-size", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ product_id: productId })
-                });
-
-                const data = await response.json();
-                btn.disabled = false;
-                btn.textContent = "Đặt hàng";
-
-                if (!response.ok) {
-                    alert(data.message || "Lỗi khi lấy dữ liệu sản phẩm!");
-                    return;
-                }
-
-                // 🧩 Hiển thị modal với dữ liệu sản phẩm
-                showOrderModal(data);
+    discountHeader.addEventListener("click", () => {
+        if (!sorted) {
+            // Sort giảm dần
+            let rows = Array.from(tbody.rows);
+            rows.sort((a, b) => {
+                let discountA = parseInt(a.querySelector(".discount").textContent.replace(/,/g, ""));
+                let discountB = parseInt(b.querySelector(".discount").textContent.replace(/,/g, ""));
+                return discountB - discountA;
             });
-        });
-
-        function showOrderModal(data) {
-            const modal = document.getElementById("orderModal");
-            const body = document.getElementById("modalBody");
-            const title = document.getElementById("modalTitle");
-
-            title.textContent = data.message || "Thông tin sản phẩm";
-            body.innerHTML = "";
-
-            if (!data.product.colors || data.product.colors.length === 0) {
-                body.innerHTML = "<p>Không có dữ liệu màu nào.</p>";
-            } else {
-                data.product.colors.forEach(color => {
-                    const colorDiv = document.createElement("div");
-                    colorDiv.style.marginBottom = "1rem";
-                    colorDiv.style.borderBottom = "1px solid #eee";
-                    colorDiv.style.paddingBottom = "0.5rem";
-
-                    colorDiv.innerHTML = `
-                        <div style="display:flex; align-items:center; gap:1rem;">
-                            <img src="${color.imageLink}" alt="${color.color_name}" style="width:50px; height:50px; border-radius:4px; border:1px solid #ccc;">
-                            <div>
-                                <strong>${color.color_name}</strong><br>
-                                <small>Mã: ${color.color_code || "(chưa có)"}</small>
-                            </div>
-                        </div>
-                    `;
-
-                    // Hiển thị danh sách size và ô nhập số lượng
-                    if (color.sizes && color.sizes.length > 0) {
-                        const sizeList = document.createElement("div");
-                        sizeList.style.marginTop = "10px";
-                        color.sizes.forEach(size => {
-                            const sizeDiv = document.createElement("div");
-                            sizeDiv.style.display = "flex";
-                            sizeDiv.style.alignItems = "center";
-                            sizeDiv.style.marginBottom = "10px";
-
-                            sizeDiv.innerHTML = `
-                                <span style="padding:4px 8px; border:1px solid #ccc; border-radius:4px; margin-right:10px;">${size.size_name}</span>
-                                <input type="number" min="0" placeholder="Số lượng" class="size-quantity" data-size="${size.size_name}" data-color="${color.color_name}" style="width: 60px;">
-                            `;
-                            sizeList.appendChild(sizeDiv);
-                        });
-                        colorDiv.appendChild(sizeList);
-                    }
-
-                    body.appendChild(colorDiv);
-                });
-            }
-
-            modal.style.display = "flex";
+            rows.forEach(row => tbody.appendChild(row));
+            sorted = true;
+            discountHeader.textContent = "Giảm (¥) ▼";
+        } else {
+            // Trở lại như ban đầu
+            originalRows.forEach(row => tbody.appendChild(row));
+            sorted = false;
+            discountHeader.textContent = "Giảm (¥) ⬍";
         }
+    });
+</script>
+<script>
+    const brandLinks = document.querySelectorAll(".logo .brand");
+    const path = window.location.pathname;
 
-        document.getElementById("closeModal").addEventListener("click", () => {
-            document.getElementById("orderModal").style.display = "none";
-        });
+    brandLinks.forEach(link => {
+        link.classList.remove("active");
+        if (path.startsWith("/gu") && link.dataset.brand === "gu") {
+            link.classList.add("active");
+        } else if (path.startsWith("/uniqlo") && link.dataset.brand === "uniqlo") {
+            link.classList.add("active");
+        }
+    });
+</script>
+<script>
+    document.querySelectorAll(".follow-btn, .unfollow-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+            const productId = btn.dataset.id;
+            const isFollow = btn.dataset.follow === "true";
 
-        // Đóng modal khi click ra ngoài
-        window.addEventListener("click", e => {
-            const modal = document.getElementById("orderModal");
-            if (e.target === modal) modal.style.display = "none";
-        });
-
-        // Gửi dữ liệu khi submit form
-        document.getElementById("submitOrder").addEventListener("click", async () => {
-            const quantities = [];
-            document.querySelectorAll(".size-quantity").forEach(input => {
-                const size = input.dataset.size;
-                const color = input.dataset.color;
-                const quantity = parseInt(input.value) || 0;
-
-                if (quantity > 0) {
-                    quantities.push({ size, color, quantity });
-                }
-            });
-
-            if (quantities.length === 0) {
-                alert("Vui lòng chọn ít nhất một kích thước và số lượng.");
-                return;
-            }
-
-            const response = await fetch("/submit-order", {
+            const response = await fetch("/toggle-follow", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ quantities })
+                body: JSON.stringify({ product_id: productId })
             });
 
             const data = await response.json();
             if (response.ok) {
-                alert("Đặt hàng thành công!");
+                // Cập nhật lại trạng thái nút
+                btn.dataset.follow = data.follow_flag ? "true" : "false";
+                btn.textContent = data.follow_flag ? "Unfollow" : "Follow";
+                btn.style.backgroundColor = data.follow_flag ? "#e65e3c" : "#319dab";
+                btn.style.color = "#fff";
             } else {
-                alert(data.message || "Lỗi khi đặt hàng!");
+                alert(data.message || "Lỗi khi cập nhật");
+            }
+        });
+    });
+</script>
+<script>
+    // update thông tin mới nhất cho sản phẩm
+    document.querySelectorAll(".update-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+            const productId = btn.dataset.id;
+            btn.disabled = true;
+            btn.textContent = "Đang tải...";
+
+            const response = await fetch("/update-product", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ product_id: productId })
+            });
+
+            const data = await response.json();
+            btn.disabled = false;
+            btn.textContent = "Đặt hàng";
+
+            if (!response.ok) {
+                alert(data.message || "Lỗi khi lấy dữ liệu sản phẩm!");
+                return;
+            }
+
+            // 🧩 Hiển thị modal với dữ liệu sản phẩm
+            showUpdateModal(data);
+        });
+    });
+
+    function showUpdateModal(data) {
+        const modal = document.getElementById("updateModal");
+        const body = document.getElementById("updateModalBody");
+        const title = document.getElementById("updateModalTitle");
+
+        title.textContent = data.message || "Thông tin sản phẩm";
+        body.innerHTML = "";
+
+        if (!data.colors || data.colors.length === 0) {
+            body.innerHTML = "<p>Không có dữ liệu màu nào.</p>";
+        } else {
+            data.colors.forEach(color => {
+                const colorDiv = document.createElement("div");
+                colorDiv.style.marginBottom = "1rem";
+                colorDiv.style.borderBottom = "1px solid #eee";
+                colorDiv.style.paddingBottom = "0.5rem";
+
+                colorDiv.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:1rem;">
+                        <img src="${color.imageLink}" alt="${color.color_name}" style="width:50px; height:50px; border-radius:4px; border:1px solid #ccc;">
+                        <div>
+                            <strong>${color.color_name}</strong><br>
+                            <small>Mã: ${color.color_code || "(chưa có)"}</small>
+                        </div>
+                    </div>
+                `;
+                body.appendChild(colorDiv);
+            });
+        }
+
+        modal.style.display = "flex";
+    }
+
+    document.getElementById("closeUpdateModal").addEventListener("click", () => {
+        document.getElementById("updateModal").style.display = "none";
+    });
+
+    // Đóng modal khi click ra ngoài
+    window.addEventListener("click", e => {
+        const modal = document.getElementById("updateModal");
+        if (e.target === modal) modal.style.display = "none";
+    });
+</script>
+<script>
+    // Bắt đầu hiển thị modal sản phẩm và size,
+    document.querySelectorAll(".order-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+            const productId = btn.dataset.id;
+            btn.disabled = true;
+            btn.textContent = "Đang tải...";
+
+            const response = await fetch("/get-product-color-and-size", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ product_id: productId })
+            });
+
+            const data = await response.json();
+            btn.disabled = false;
+            btn.textContent = "Đặt hàng";
+
+            if (!response.ok) {
+                alert(data.message || "Lỗi khi lấy dữ liệu sản phẩm!");
+                return;
+            }
+
+            // 🧩 Hiển thị modal với dữ liệu sản phẩm
+            showOrderModal(data);
+        });
+    });
+
+    function showOrderModal(data) {
+
+        const product_id = data.product.id
+        const modal = document.getElementById("orderModal");
+        const body = document.getElementById("modalBody");
+        const title = document.getElementById("modalTitle");
+
+        title.textContent = data.message || "Thông tin sản phẩm";
+        body.innerHTML = "";
+
+        if (!data.product.colors || data.product.colors.length === 0) {
+            body.innerHTML = "<p>Không có dữ liệu màu nào.</p>";
+        } else {
+            data.product.colors.forEach(color => {
+                const colorDiv = document.createElement("div");
+                colorDiv.style.marginBottom = "1rem";
+                colorDiv.style.borderBottom = "1px solid #eee";
+                colorDiv.style.paddingBottom = "0.5rem";
+
+                console.log(color.color_name)
+                colorDiv.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:1rem;">
+                        <img src="${color.imageLink}" alt="${color.color_name}" style="width:50px; height:50px; border-radius:4px; border:1px solid #ccc;">
+                        <div>
+                            <strong>${color.color_name}</strong><br>
+                            <small>Mã: ${color.color_code || "(chưa có)"}</small>
+                        </div>
+                    </div>
+                `;
+
+                // Hiển thị danh sách size và ô nhập số lượng
+                if (color.sizes && color.sizes.length > 0) {
+                    const sizeList = document.createElement("div");
+                    sizeList.style.marginTop = "10px";
+                    color.sizes.forEach(size => {
+                        const sizeDiv = document.createElement("div");
+                        sizeDiv.style.display = "flex";
+                        sizeDiv.style.alignItems = "center";
+                        sizeDiv.style.marginBottom = "10px";
+
+                        sizeDiv.innerHTML = `
+                            <span style="padding:4px 8px; border:1px solid #ccc; border-radius:4px; margin-right:10px;">${size.size_name}</span>
+                            <input type="number" min="0" placeholder="Số lượng" class="size-quantity" data-size="${size.size_name}" data-color="${color.color_name}" data-code="${product_id}" style="width: 60px;">
+                        `;
+                        sizeList.appendChild(sizeDiv);
+                    });
+                    colorDiv.appendChild(sizeList);
+                }
+
+                body.appendChild(colorDiv);
+            });
+        }
+
+        modal.style.display = "flex";
+    }
+
+    document.getElementById("closeModal").addEventListener("click", () => {
+        document.getElementById("orderModal").style.display = "none";
+    });
+
+    // Đóng modal khi click ra ngoài
+    window.addEventListener("click", e => {
+        const modal = document.getElementById("orderModal");
+        if (e.target === modal) modal.style.display = "none";
+    });
+
+    // Gửi dữ liệu khi submit form
+    document.getElementById("submitOrder").addEventListener("click", async () => {
+        const quantities = [];
+        document.querySelectorAll(".size-quantity").forEach(input => {
+            const product_id = input.dataset.code;
+            const size = input.dataset.size;
+            const color = input.dataset.color;
+            const quantity = parseInt(input.value) || 0;
+
+            if (quantity > 0) {
+                quantities.push({ product_id, color, size, quantity });
             }
         });
 
-    </script>
+        if (quantities.length === 0) {
+            alert("Vui lòng chọn ít nhất một kích thước và số lượng.");
+            return;
+        }
+
+        console.log({quantities})
+
+        const response = await fetch("/submit-order", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ quantities })
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+            document.getElementById("orderModal").style.display = "none";
+            alert("Đặt hàng thành công!");
+        } else {
+            alert(data.message || "Lỗi khi đặt hàng!");
+        }
+    });
+
+</script>
 </body>
 
 </html>

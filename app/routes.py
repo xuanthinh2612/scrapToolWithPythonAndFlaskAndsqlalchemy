@@ -3,9 +3,10 @@ from collections import defaultdict
 
 from flask import Blueprint, render_template, request, redirect, url_for, jsonify, flash
 from sqlalchemy import desc, or_, asc, and_
+from sqlalchemy.sql.coercions import expect
 
 from scraper import google_mail_service
-from app.models import Product, OrderDetail, ProductColor, ProductSize
+from app.models import Product, OrderDetail, ProductColor, ProductSize, PreOrderInfo
 from scraper import uniqlo_crawl
 from app.const import *
 
@@ -273,8 +274,8 @@ def update_all_email_data():
         return f"Lỗi: {str(e)}"
 
 
-@main.route("/order-product", methods=["POST"])
-def order_product():
+@main.route("/update-product", methods=["POST"])
+def update_product():
     """
     Khi người dùng nhấn nút 'update':
     - Nhận product_id từ client
@@ -310,13 +311,13 @@ def order_product():
 
     try:
         driver.get(product.link)
-        time.sleep(3)  # chờ trang SPA render
+        time.sleep(5)  # chờ trang SPA render
         # 🎨 Lấy danh sách màu
         colors = []
         # 🎯 Tìm <ul> chứa danh sách màu
         ul_selector = "ul.content-alignment.collection-list-horizontal"
         ul_element = driver.find_element(By.CSS_SELECTOR, ul_selector)
-        product_price = driver.find_element(By.CSS_SELECTOR, "p.fr-ec-price-text.fr-ec-price-text--large").text.replace("¥", "").replace(",", "")
+        # product_price = driver.find_element(By.CSS_SELECTOR, "p.fr-ec-price-text.fr-ec-price-text--large").text.replace("¥", "").replace(",", "")
         # 🎨 Lặp qua từng <li> (mỗi màu)
         li_elements = ul_element.find_elements(By.CSS_SELECTOR, "li.collection-list-horizontal__item")
 
@@ -347,22 +348,22 @@ def order_product():
                     # size_name = size.find_element(By.CSS_SELECTOR, "button.chip div[data-testid='ITOContentAlignment'] div.typography").text
                     size_name = size.find_element(By.CSS_SELECTOR, "div[data-testid='ITOTypography']").text
                     size_over_flg = size.find_elements(By.CSS_SELECTOR, "div.strike")
-                    
+
                     if not size_over_flg:
                         size_by_color.append({
                             "size_name": size_name.strip(),
-                        })                        
-                
+                        })
+
                 sizes[color_name.strip()] = size_by_color
 
             except Exception as e:
                 print(f"Lỗi khi lấy màu: {e}")
-            
+
         # # --- Cập nhật DB ---
         # # Xóa danh sách màu cũ (nếu có cascade delete-orphan)
         # UDPATE Product info
         product.colors.clear()
-        product.current_price = product_price
+        # product.current_price = product_price
 
         # Cập nhật màu có thể đặt hàng
         for color_data in colors:
@@ -372,12 +373,12 @@ def order_product():
                 color_code=color_data["color_code"],
                 product=product,
             )
-            
+
             size_list = sizes.get(color_data["color_name"], [])
-            for size_data  in size_list:
+            for size_data in size_list:
                 size_obj = ProductSize(
-                    color = color_obj,
-                    size_name = size_data ["size_name"]
+                    color=color_obj,
+                    size_name=size_data["size_name"]
                 )
                 db.session.add(size_obj)
 
@@ -439,6 +440,7 @@ def get_product_color_and_size():
         return jsonify({
             "message": f"Thông tin sản phẩm {product.name}",
             "product": {
+                "id": product.id,
                 "name": product.name,
                 "imageLink": product.imageLink,
                 "colors": colors
@@ -448,3 +450,83 @@ def get_product_color_and_size():
     except Exception as e:
         db.session.rollback()
         return jsonify({"message": f"Lỗi khi xử lý: {str(e)}"}), 500
+
+
+@main.route("/submit-order", methods=["POST"])
+def save_product_to_print_list():
+    from app import db
+
+    data = request.get_json()
+    order_list = data.get("quantities")
+
+    if not order_list:
+        return jsonify({"message": "Loi khong co san pham"}), 400
+    try:
+        for order in order_list:
+            product = Product.query.get(order["product_id"])
+            product_code = product.product_code
+            color = order["color"]
+            size = order["size"]
+            quantity = order["quantity"]
+
+            pre_order_info_exist = PreOrderInfo.query.filter_by(product_code=product_code, color=color,
+                                                                size=size).first()
+
+            if pre_order_info_exist:
+                pre_order_info_exist.quantity += quantity
+                db.session.add(pre_order_info_exist)
+            else:
+                pre_order_info_obj = PreOrderInfo(
+                    product_code=product_code,
+                    color=color,
+                    quantity=quantity,
+                    size=size,
+                    price=product.current_price,
+                    link=product.link)
+                db.session.add(pre_order_info_obj)
+        db.session.commit()
+
+        return jsonify({"message": f"Thêm thành công!"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"message": f"Lỗi khi xử lý: {str(e)}"}), 500
+
+
+@main.route("/pre-order-info", methods=["GET"])
+def go_to_cart():
+    pre_order_list = PreOrderInfo.query.all()
+    return render_template("pre_order_list.html", pre_order_list=pre_order_list, brand="uniqlo")
+
+
+@main.route("/export-pre-order-data", methods=["POST"])
+def export_product_to_order():
+    from io import StringIO
+    import csv
+    from flask import Response
+
+    data = PreOrderInfo.query.all()
+
+    si = StringIO()
+    writer = csv.writer(si)
+    writer.writerow(["No", "Code", "Quantity", "Size", "Color", "Price", "URL"])
+    count = 1
+    for row in data:
+        writer.writerow([
+            count,
+            row.product_code,
+            row.quantity,
+            row.size,
+            row.color,
+            row.price,
+            row.link
+        ])
+        count += 1
+
+    output = si.getvalue()
+    si.close()
+
+    return Response(
+        output,
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment; filename=pre_order_export.csv"}
+    )

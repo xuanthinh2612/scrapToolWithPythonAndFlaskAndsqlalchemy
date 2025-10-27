@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, false
 from sqlalchemy.orm import relationship
 
 from app import db
@@ -37,6 +37,17 @@ class ProductSize(db.Model):
     size_name = Column(String(255))
 
     color = relationship("ProductColor", back_populates="sizes")
+
+
+class PreOrderInfo(db.Model):
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    product_code = Column(String(50))
+    color = Column(String(255))
+    quantity = Column(Integer)
+    size = Column(String(255))
+    price = Column(Integer)
+    link = Column(String(500))
+    export_flag = Column(Boolean, default=False)
 
 
 class OrderDetail(db.Model):
