@@ -276,7 +276,7 @@ def update_all_email_data():
 @main.route("/order-product", methods=["POST"])
 def order_product():
     """
-    Khi người dùng nhấn nút 'Đặt hàng':
+    Khi người dùng nhấn nút 'update':
     - Nhận product_id từ client
     - Mở trang product.link bằng Selenium (headless)
     - Lấy danh sách màu + ảnh chip
@@ -311,18 +311,18 @@ def order_product():
     try:
         driver.get(product.link)
         time.sleep(3)  # chờ trang SPA render
-
         # 🎨 Lấy danh sách màu
         colors = []
-
         # 🎯 Tìm <ul> chứa danh sách màu
         ul_selector = "ul.content-alignment.collection-list-horizontal"
         ul_element = driver.find_element(By.CSS_SELECTOR, ul_selector)
-
+        product_price = driver.find_element(By.CSS_SELECTOR, "p.fr-ec-price-text.fr-ec-price-text--large").text.replace("¥", "").replace(",", "")
         # 🎨 Lặp qua từng <li> (mỗi màu)
         li_elements = ul_element.find_elements(By.CSS_SELECTOR, "li.collection-list-horizontal__item")
 
         colors = []
+        sizes = []
+
         for li in li_elements:
             try:
                 button = li.find_element(By.CSS_SELECTOR, "button.chip")
@@ -336,12 +336,36 @@ def order_product():
                     "color_name": color_name.strip(),
                     "imageLink": image_link.strip()
                 })
+
+                # Click qua mỗi color để lấy size 
+                button.click()
+                size_group_selector = "div.size-chip-group"
+                size_group_element = driver.find_element(By.CSS_SELECTOR, size_group_selector)
+                size_elements = size_group_element.find_elements(By.CSS_SELECTOR, "div.size-chip-wrapper")
+                for size in size_elements:
+                    # size_name = size.find_element(By.CSS_SELECTOR, "button.chip div[data-testid='ITOContentAlignment'] div.typography").text
+                    size_name = size.find_element(By.CSS_SELECTOR, "div[data-testid='ITOTypography']").text
+                    size_over_flg = size.find_elements(By.CSS_SELECTOR, "div.strike")
+                    
+                    if not size_over_flg:
+                        sizes.append({
+                            "color_name": color_name.strip(),
+                            "size_name": size_name.strip(),
+                        })
+                        print(size_name)
+
             except Exception as e:
                 print(f"Lỗi khi lấy màu: {e}")
+            
+
+
 
         # # --- Cập nhật DB ---
         # # Xóa danh sách màu cũ (nếu có cascade delete-orphan)
         product.colors.clear()
+
+        # UDPATE Product info
+        product.current_price = product_price
 
         for color_data in colors:
             color_obj = ProductColor(
@@ -350,6 +374,8 @@ def order_product():
                 color_code=color_data["color_code"],
                 product=product,
             )
+            
+
 
             db.session.add(color_obj)
 
@@ -366,3 +392,37 @@ def order_product():
 
     finally:
         driver.quit()
+
+
+@main.route("/get-product-color-and-size", methods=["GET"])
+def get_product_color_and_size():
+    from app import db
+
+    """
+    Khi người dùng nhấn nút 'Đặt hàng':
+    - Nhận product_id từ client
+    - Lấy danh sách màu + ảnh chip từ DB
+    """
+
+    data = request.get_json()
+    product_id = data.get("product_id")
+
+    if not product_id:
+        return jsonify({"message": "Thiếu ID sản phẩm"}), 400
+
+    # --- Lấy sản phẩm từ DB ---
+    product = Product.query.get(product_id)
+    if not product:
+        return jsonify({"message": "Không tìm thấy sản phẩm"}), 404
+
+    try:
+
+        return jsonify({
+            "message": f"Đã cập nhật {len(colors)} màu cho sản phẩm {product.name}",
+            "colors": colors
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"message": f"Lỗi khi xử lý Selenium: {str(e)}"}), 500
+

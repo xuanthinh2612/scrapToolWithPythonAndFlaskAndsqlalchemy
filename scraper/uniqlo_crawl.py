@@ -82,9 +82,9 @@ def uniqlo_crawl(category, url):
             product_code = link.split("/products/E")[1].split("-")[0]
             imageLink = p.find_element(By.CSS_SELECTOR, "img").get_attribute("src")
             name = p.find_element(By.CSS_SELECTOR,
-                                  "div.product-tile--vertical__content-area div[data-testid='ITOTypography']:nth-child(2)").text
+                                  "div.product-tile__content-area div[data-testid='ITOTypography']:nth-child(2)").text
             productPriceDiv = p.find_element(By.CSS_SELECTOR,
-                                             "div.product-tile--vertical__content-area div[data-testid='ITOContentAlignment'] div[data-testid='ITOTypography']")
+                                             "div.product-tile__content-area div[data-testid='ITOContentAlignment'] div[data-testid='ITOTypography']")
             price = int(productPriceDiv.text.replace("¥", "").replace(",", ""))
             discountFlg = "ito-attention-text-color" in productPriceDiv.get_attribute("class")
 
