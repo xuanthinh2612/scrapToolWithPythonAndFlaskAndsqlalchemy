@@ -237,7 +237,7 @@
     </style>
     <style>
         .follow-btn {
-            padding: 0.4rem 0.8rem;
+            padding: 0.3rem 0.3rem;
             border: none;
             border-radius: 5px;
             cursor: pointer;
@@ -251,7 +251,7 @@
         }
 
         .unfollow-btn {
-            padding: 0.4rem 0.8rem;
+            padding: 0.3rem 0.3rem;
             border: none;
             border-radius: 5px;
             cursor: pointer;
@@ -336,8 +336,22 @@
                         data-follow="{{ 'true' if p.follow_flag else 'false' }}">
                     {{ 'Unfollow' if p.follow_flag else 'Follow' }}
                 </button>
-                <button class="update-btn" data-id="{{ p.id }}">Cập nhật</button>
-                <button class="order-btn" data-id="{{ p.id }}">Đặt hàng</button>
+                <button class="update-btn" data-id="{{ p.id }}" 
+                    style="background-color: #24b93bff; color: white; padding: 0.3rem 0.3rem;
+                            border: none;
+                            border-radius: 5px;
+                            cursor: pointer;
+                            transition: 0.3s;
+                            margin: 1px;">
+                Cập nhật</button>
+                <button class="order-btn" data-id="{{ p.id }}"
+                    style="background-color: #e32727ff; color: white; padding: 0.3rem 0.3rem;
+                            border: none;
+                            border-radius: 5px;
+                            cursor: pointer;
+                            transition: 0.3s;
+                            margin: 1px;">
+                Đặt hàng</button>
             </td>
         </tr>
         {% endfor %}
@@ -626,7 +640,7 @@
 
                         sizeDiv.innerHTML = `
                             <span style="padding:4px 8px; border:1px solid #ccc; border-radius:4px; margin-right:10px;">${size.size_name}</span>
-                            <input type="number" min="0" placeholder="Số lượng" class="size-quantity" data-size="${size.size_name}" data-color="${color.color_name}" data-code="${product_id}" style="width: 60px;">
+                            <input type="number" min="0" placeholder="Số lượng" class="size-quantity" data-size="${size.size_name}" data-color="${color.color_name}" data-code="${product_id}" style="width: 100px; height:25px; font-size: medium;">
                         `;
                         sizeList.appendChild(sizeDiv);
                     });

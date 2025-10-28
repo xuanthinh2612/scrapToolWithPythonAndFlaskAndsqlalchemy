@@ -530,3 +530,21 @@ def export_product_to_order():
         mimetype="text/csv",
         headers={"Content-Disposition": "attachment; filename=pre_order_export.csv"}
     )
+
+@main.route("/delete-pre-order/<int:item_id>", methods=["DELETE"])
+def delete_pre_order(item_id):
+    from flask import jsonify
+    from app.models import PreOrderInfo  # tùy theo cấu trúc project của bạn
+    from app import db  # hoặc current_app.db nếu bạn đang dùng factory
+
+    item = PreOrderInfo.query.get(item_id)
+    if not item:
+        return jsonify({"success": False, "error": "Item not found"}), 404
+
+    try:
+        db.session.delete(item)
+        db.session.commit()
+        return jsonify({"success": True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500

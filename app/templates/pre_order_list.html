@@ -142,7 +142,7 @@
     </nav>
 
     <div class="container">
-        <h2>Danh sách Pre-Order (Tổng: {{ pre_order_list|length }})</h2>
+        <h2>Danh sách Pre-Order</h2>
 
         <div class="table-wrapper">
             <table>
@@ -155,7 +155,7 @@
                         <th>Số lượng</th>
                         <th>Giá (¥)</th>
                         <th>Link</th>
-                        <th>Đã xuất?</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -169,11 +169,9 @@
                         <td>¥{{ "{:,}".format(item.price or 0) }}</td>
                         <td><a href="{{ item.link }}" target="_blank">Xem</a></td>
                         <td>
-                            {% if item.export_flag %}
-                                ✅
-                            {% else %}
-                                ❌
-                            {% endif %}
+                            <button class="delete-btn" data-id="{{ item.id }}" 
+                            style="padding: 0.5rem 1rem; background-color: #fd3f3fff; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            🗑️ Xóa</button>
                         </td>
                     </tr>
                     {% endfor %}
@@ -189,6 +187,57 @@
     <footer>
         &copy; 2025 Pre-Order System. All rights reserved.
     </footer>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // Lắng nghe click nút xóa
+            document.querySelectorAll(".delete-btn").forEach(btn => {
+                btn.addEventListener("click", async (e) => {
+                    const id = e.target.getAttribute("data-id");
+
+                    if (!confirm("Bạn có chắc muốn xóa record ID " + id + " không?")) return;
+
+                    const row = e.target.closest("tr");
+
+                    try {
+                        const res = await fetch(`/delete-pre-order/${id}`, {
+                            method: "DELETE",
+                            headers: { "Content-Type": "application/json" }
+                        });
+                        const data = await res.json();
+
+                        if (res.ok && data.success) {
+                            showToast("✅ Xóa thành công!", "success");
+                            row.remove();
+                        } else {
+                            showToast("❌ Xóa thất bại!", "error");
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        showToast("⚠️ Lỗi kết nối server!", "error");
+                    }
+                });
+            });
+        });
+
+        // Hàm hiển thị toast đơn giản
+        function showToast(message, type) {
+            const toast = document.createElement("div");
+            toast.textContent = message;
+            toast.style.position = "fixed";
+            toast.style.bottom = "20px";
+            toast.style.right = "20px";
+            toast.style.padding = "10px 20px";
+            toast.style.borderRadius = "6px";
+            toast.style.color = "white";
+            toast.style.fontWeight = "500";
+            toast.style.zIndex = "9999";
+            toast.style.backgroundColor = type === "success" ? "#28a745" : "#dc3545";
+            document.body.appendChild(toast);
+
+            setTimeout(() => toast.remove(), 2500);
+        }
+        </script>
 
 </body>
 </html>
