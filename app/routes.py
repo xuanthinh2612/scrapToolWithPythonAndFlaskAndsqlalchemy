@@ -548,3 +548,19 @@ def delete_pre_order(item_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "error": str(e)}), 500
+
+
+@main.route("/delete-all-pre-order", methods=["DELETE"])
+def delete_all_pre_order():
+    from flask import jsonify
+    from app.models import PreOrderInfo
+    from app import db
+
+    try:
+        db.session.query(PreOrderInfo).delete()  # xóa toàn bộ bảng
+        db.session.commit()
+        return jsonify({"success": True, "message": "Đã xóa toàn bộ PreOrderInfo"})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
+

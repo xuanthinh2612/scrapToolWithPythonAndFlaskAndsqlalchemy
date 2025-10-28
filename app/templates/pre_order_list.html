@@ -179,8 +179,12 @@
             </table>
         </div>
 
-        <form id="exportForm" action="/export-pre-order-data" method="POST">
+        <form id="exportForm" action="/export-pre-order-data" method="POST" style="display: flex; justify-content: space-between; align-items: center;">
             <button type="submit" class="export-btn">⬇️ Export CSV</button>
+            <button id="deleteAllBtn" type="button" style="padding: 0.75rem 1.25rem; background-color: rgb(250, 173, 51); color: white; border: none; border-radius: 5px; cursor: pointer;">
+                Xóa toàn bộ
+            </button>
+
         </form>
     </div>
 
@@ -189,6 +193,7 @@
     </footer>
 
     <script>
+        // xóa từng sản phẩm
         document.addEventListener("DOMContentLoaded", () => {
             // Lắng nghe click nút xóa
             document.querySelectorAll(".delete-btn").forEach(btn => {
@@ -237,7 +242,29 @@
 
             setTimeout(() => toast.remove(), 2500);
         }
-        </script>
 
+        // delete toàn bộ sản phẩm
+        document.getElementById("deleteAllBtn").addEventListener("click", async () => {
+            if (!confirm("Bạn có chắc chắn muốn xóa toàn bộ dữ liệu PreOrderInfo không?")) return;
+
+            try {
+                const response = await fetch("/delete-all-pre-order", {
+                    method: "DELETE",
+                });
+                const result = await response.json();
+
+                const msgBox = document.getElementById("deleteResult");
+                if (result.success) {
+                    showToast("✅ Xóa toàn bộ thành công!", "success");
+                    setTimeout(() => window.location.reload(), 2000);
+                } else {
+                    showToast("✅ Xóa lỗi!", "error");
+                    setTimeout(() => window.location.reload(), 2000);
+                }
+            } catch (error) {
+                alert("Có lỗi khi gọi server: " + error);
+            }
+        });
+    </script>
 </body>
 </html>
