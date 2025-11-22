@@ -302,7 +302,7 @@ def update_product():
 
     # --- Cấu hình Selenium ---
     chrome_options = Options()
-    chrome_options.add_argument("--headless=new")
+    # chrome_options.add_argument("--headless=new")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("--window-size=1920,1080")
@@ -317,7 +317,7 @@ def update_product():
         # 🎯 Tìm <ul> chứa danh sách màu
         ul_selector = "ul.content-alignment.collection-list-horizontal"
         ul_element = driver.find_element(By.CSS_SELECTOR, ul_selector)
-        # product_price = driver.find_element(By.CSS_SELECTOR, "p.fr-ec-price-text.fr-ec-price-text--large").text.replace("¥", "").replace(",", "")
+        product_price = driver.find_element(By.CSS_SELECTOR, "p.fr-ec-price-text.fr-ec-price-text--large").text.replace("¥", "").replace(",", "")
         # 🎨 Lặp qua từng <li> (mỗi màu)
         li_elements = ul_element.find_elements(By.CSS_SELECTOR, "li.collection-list-horizontal__item")
 
@@ -363,7 +363,7 @@ def update_product():
         # # Xóa danh sách màu cũ (nếu có cascade delete-orphan)
         # UDPATE Product info
         product.colors.clear()
-        # product.current_price = product_price
+        product.current_price = product_price
 
         # Cập nhật màu có thể đặt hàng
         for color_data in colors:
